@@ -399,6 +399,7 @@ Este é um projeto confidencial. Para contribuir:
 Todos os direitos reservados © 2025 ACHADOS
 
 Autor: **Fernando Júnior Grão Paim Quipiaca**  
+Desenvolvedor : **[Tiago Looze (THPL28)](https://github.com/THPL28)**  
 Versão: **1.0**  
 Classificação: **Confidencial**
 
