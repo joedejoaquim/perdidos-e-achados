@@ -37,8 +37,8 @@ export const useAuth = () => {
         }
 
         setUser(userData);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }

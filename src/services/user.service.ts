@@ -86,7 +86,7 @@ export class UserService {
     return data;
   }
 
-  static async verifyKyc(userId: string, kycData: any): Promise<void> {
+  static async verifyKyc(userId: string, kycData: Record<string, unknown>): Promise<void> {
     // This would typically call an external KYC service
     // For now, we'll just update the user
     await this.updateUser(userId, {

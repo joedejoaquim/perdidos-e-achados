@@ -201,9 +201,9 @@ export const storage = {
     const item = localStorage.getItem(key);
     if (!item) return defaultValue ?? null;
     try {
-      return JSON.parse(item);
+      return JSON.parse(item) as T;
     } catch {
-      return item as any;
+      return item as unknown as T;
     }
   },
   set: <T,>(key: string, value: T): void => {

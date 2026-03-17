@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { LEVEL_THRESHOLDS, getXpToNextLevel } from "@/utils/helpers";
 
@@ -75,8 +76,16 @@ export const XPProgressBar: React.FC<XPProgressBarProps> = ({ xp, level }) => {
   );
 };
 
+interface BadgeItem {
+  id: string;
+  badges?: {
+    icon?: string;
+    name?: string;
+  };
+}
+
 interface BadgeGridProps {
-  badges: any[];
+  badges: BadgeItem[];
   layout?: "grid" | "row";
 }
 
@@ -161,10 +170,12 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({ users, limit = 10 })
               #{index + 1}
             </div>
             {user.avatar_url && (
-              <img
+              <Image
                 src={user.avatar_url}
                 alt={user.name}
-                className="w-8 h-8 rounded-full"
+                width={32}
+                height={32}
+                className="rounded-full"
               />
             )}
             <div className="flex-1">

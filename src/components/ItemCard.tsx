@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { FoundItem } from "@/types";
 import { formatCurrency, formatDate } from "@/utils/helpers";
 import Link from "next/link";
@@ -35,10 +36,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       {/* Image */}
       <div className="relative w-full h-48 bg-muted overflow-hidden">
         {item.photo_url ? (
-          <img
+          <Image
             src={item.photo_url}
             alt={item.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">
