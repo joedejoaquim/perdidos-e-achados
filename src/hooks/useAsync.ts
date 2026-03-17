@@ -8,14 +8,14 @@ interface UseAsyncState<T> {
   error: Error | null;
 }
 
-interface UseAsyncOptions {
-  onSuccess?: (data: any) => void;
+interface UseAsyncOptions<T> {
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
 }
 
 export const useAsync = <T,>(
   asyncFunction: () => Promise<T>,
-  options?: UseAsyncOptions
+  options?: UseAsyncOptions<T>
 ) => {
   const [state, setState] = useState<UseAsyncState<T>>({
     data: null,
@@ -44,15 +44,17 @@ export const useAsync = <T,>(
 
 export const useFetch = <T,>(
   asyncFunction: () => Promise<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dependencies: any[] = [],
-  options?: UseAsyncOptions
+  options?: UseAsyncOptions<T>
 ) => {
   const { execute, ...state } = useAsync(asyncFunction, options);
 
   // Execute on mount and when dependencies change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     execute();
-  }, dependencies);
+  }, [...dependencies, execute]);
 
   return state;
 };
