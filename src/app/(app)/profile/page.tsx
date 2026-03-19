@@ -10,9 +10,8 @@ import ActivityHistory, { ActivityItem } from '@/components/profile/ActivityHist
 import GlobalRanking from '@/components/profile/GlobalRanking';
 import BadgesHonor from '@/components/profile/BadgesHonor';
 import RoleToggle from '@/components/profile/RoleToggle';
-import MagicMenu from '@/components/dashboard/MagicMenu';
 import { useAuth } from '@/hooks/useAuth';
-import { supabaseBrowser as supabase } from '@/lib/supabase-browser';
+import { supabase } from '@/lib/supabase';
 import { formatRelativeTime, formatCurrency } from '@/utils/helpers';
 
 export default function UserProfilePage() {
