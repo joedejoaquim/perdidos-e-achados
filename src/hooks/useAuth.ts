@@ -2,72 +2,223 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+
+import { useOptionalAuthContext } from "@/components/auth/AuthProvider";
+import { supabaseBrowser as supabase } from "@/lib/supabase-browser";
 import { User } from "@/types";
 
-export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type UseAuthOptions = {
+  enabled?: boolean;
+};
+
+type AuthSnapshot = {
+  user: User | null;
+  error: string | null;
+};
+
+let authSnapshot: AuthSnapshot = {
+  user: null,
+  error: null,
+};
+let authSnapshotReady = false;
+let pendingAuthSnapshot: Promise<AuthSnapshot> | null = null;
+
+function buildFallbackUser(authUser: {
+  id: string;
+  email?: string | null;
+  email_confirmed_at?: string | null;
+  user_metadata?: Record<string, any>;
+}): User {
+  return {
+    id: authUser.id,
+    email: authUser.email || "",
+    name:
+      authUser.user_metadata?.name ||
+      authUser.user_metadata?.full_name ||
+      authUser.email?.split("@")[0] ||
+      "Usuario",
+    phone: authUser.user_metadata?.phone || "",
+    xp: 0,
+    level: "bronze",
+    rating: 0,
+    rank_position: 0,
+    kyc_status: "not_started",
+    verified: Boolean(authUser.email_confirmed_at),
+    avatar_url:
+      authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture,
+    created_at: new Date(),
+    updated_at: new Date(),
+  };
+}
+
+async function resolveAuthSnapshot(): Promise<AuthSnapshot> {
+  if (pendingAuthSnapshot) {
+    return pendingAuthSnapshot;
+  }
+
+  pendingAuthSnapshot = (async () => {
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (!authUser) {
+        return { user: null, error: null };
+      }
+
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
+
+      if (!userError && userData) {
+        return { user: userData, error: null };
+      }
+
+      const syncResponse = await fetch("/api/auth/profile", {
+        method: "POST",
+      });
+      const syncPayload = await syncResponse.json().catch(() => null);
+
+      if (!syncResponse.ok || !syncPayload?.data) {
+        return {
+          user: buildFallbackUser(authUser),
+          error:
+            syncPayload?.error || "Os dados do banco ainda nao foram configurados.",
+        };
+      }
+
+      return {
+        user: syncPayload.data,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        user: null,
+        error: error instanceof Error ? error.message : "Erro ao carregar sessao",
+      };
+    }
+  })();
+
+  const snapshot = await pendingAuthSnapshot;
+  authSnapshot = snapshot;
+  authSnapshotReady = true;
+  pendingAuthSnapshot = null;
+  return snapshot;
+}
+
+function resetAuthSnapshot(nextSnapshot?: AuthSnapshot) {
+  authSnapshot = nextSnapshot ?? { user: null, error: null };
+  authSnapshotReady = Boolean(nextSnapshot);
+  pendingAuthSnapshot = null;
+}
+
+export const useAuth = ({ enabled = true }: UseAuthOptions = {}) => {
+  const authContext = useOptionalAuthContext();
+  const [user, setUser] = useState<User | null>(
+    enabled
+      ? authContext?.user ?? (authSnapshotReady ? authSnapshot.user : null)
+      : null
+  );
+  const [loading, setLoading] = useState(
+    enabled ? !(authContext?.ready || authSnapshotReady) : false
+  );
+  const [error, setError] = useState<string | null>(
+    enabled
+      ? authContext?.error ?? (authSnapshotReady ? authSnapshot.error : null)
+      : null
+  );
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
 
-        if (!authUser) {
-          setUser(null);
-          router.push("/auth/login");
-          return;
-        }
+    let isMounted = true;
 
-        // Fetch user profile from database
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", authUser.id)
-          .single();
-
-        if (userError || !userData) {
-          setError("Failed to load user data");
-          return;
-        }
-
-        setUser(userData);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    const syncState = async (forceRefresh = false) => {
+      if (forceRefresh) {
+        resetAuthSnapshot();
       }
+
+      if (!authContext?.ready && !authSnapshotReady) {
+        setLoading(true);
+      }
+
+      const snapshot =
+        authContext?.ready && !forceRefresh
+          ? { user: authContext.user, error: authContext.error }
+          : authSnapshotReady && !forceRefresh
+            ? authSnapshot
+            : await resolveAuthSnapshot();
+
+      if (!isMounted) {
+        return;
+      }
+
+      setUser(snapshot.user);
+      setError(snapshot.error);
+      setLoading(false);
+      authContext?.setUser(snapshot.user);
+      authContext?.setError(snapshot.error);
     };
 
-    checkAuth();
+    if (authContext?.ready) {
+      setUser(authContext.user);
+      setError(authContext.error);
+      setLoading(false);
+    } else {
+      syncState();
+    }
 
-    // Subscribe to auth changes
     const { data } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "SIGNED_OUT") {
-        setUser(null);
-        router.push("/auth/login");
+        resetAuthSnapshot({ user: null, error: null });
+        authContext?.setUser(null);
+        authContext?.setError(null);
+
+        if (isMounted) {
+          setUser(null);
+          setError(null);
+          setLoading(false);
+        }
+
+        router.replace("/auth/login");
+        router.refresh();
+        return;
+      }
+
+      if (
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
+        await syncState(true);
+        router.refresh();
       }
     });
 
     return () => {
+      isMounted = false;
       data?.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [authContext, enabled, router]);
 
   return { user, loading, error };
 };
 
 export const useLogout = () => {
-  const router = useRouter();
+  const authContext = useOptionalAuthContext();
 
   const logout = async () => {
+    resetAuthSnapshot({ user: null, error: null });
+    authContext?.setUser(null);
+    authContext?.setError(null);
     await supabase.auth.signOut();
-    router.push("/auth/login");
+    window.location.href = "/auth/login";
   };
 
   return logout;

@@ -2,14 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import { UserService } from "@/services/user.service";
 import { isValidEmail, isValidPhone } from "@/utils/helpers";
 import { motion } from "framer-motion";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -56,38 +52,43 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            phone,
-          },
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          password,
+        }),
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
+      const payload = await response.json();
 
-      // Create user profile
-      await UserService.createUser({
-        id: authData.user.id,
-        email,
-        name,
-        phone,
-        xp: 0,
-        level: "bronze",
-        rating: 0,
-        rank_position: 0,
-        kyc_status: "not_started",
-        verified: false,
-        created_at: new Date(),
-        updated_at: new Date(),
+      if (!response.ok) {
+        throw new Error(payload.error || "Erro ao criar conta");
+      }
+
+      const loginResponse = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
-      router.push("/auth/login?registered=true");
+      const loginPayload = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        throw new Error(loginPayload.error || "Conta criada, mas o login automatico falhou.");
+      }
+
+      window.location.assign("/dashboard");
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta");
     } finally {

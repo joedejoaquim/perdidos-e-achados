@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/Footer';
 import ProfileCard from '@/components/profile/ProfileCard';
@@ -10,11 +10,88 @@ import ActivityHistory, { ActivityItem } from '@/components/profile/ActivityHist
 import GlobalRanking from '@/components/profile/GlobalRanking';
 import BadgesHonor from '@/components/profile/BadgesHonor';
 import RoleToggle from '@/components/profile/RoleToggle';
+import MagicMenu from '@/components/dashboard/MagicMenu';
 import { useAuth } from '@/hooks/useAuth';
+import { supabaseBrowser as supabase } from '@/lib/supabase-browser';
+import { formatRelativeTime, formatCurrency } from '@/utils/helpers';
 
 export default function UserProfilePage() {
   const { user: authUser } = useAuth();
   const [activeRole, setActiveRole] = useState<'finder' | 'owner'>('finder');
+  
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [stats, setStats] = useState<any>({
+    reputation: 5.0,
+    reputationCount: 0,
+    rewardsAmount: "R$ 0,00",
+    rewardsPercentage: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authUser?.id) return;
+
+    let mounted = true;
+
+    async function fetchData() {
+      try {
+        // Fetch Real Activities
+        const { data: acts } = await supabase
+          .from('activities')
+          .select('*')
+          .eq('user_id', authUser!.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (mounted && acts) {
+          const formattedActs: ActivityItem[] = acts.map((act: any) => {
+            let icon = 'history';
+            if (act.type === 'reward_received' || act.type === 'payment') icon = 'payments';
+            if (act.type === 'item_registered' || act.type === 'item') icon = 'package_2';
+            if (act.type === 'badge_earned' || act.type === 'badge') icon = 'stars';
+            
+            return {
+              id: act.id,
+              type: 'reward', 
+              title: act.description || 'Atividade',
+              description: act.type,
+              value: act.value ? `+${act.value}` : '',
+              date: formatRelativeTime(new Date(act.created_at)),
+              icon,
+            };
+          });
+          setActivities(formattedActs);
+        }
+
+        // Fetch user stats from payments and ratings
+        const { data: payments } = await supabase
+          .from('payments')
+          .select('total_amount, status')
+          .eq('status', 'completed');
+        
+        let totalRewards = 0;
+        if (payments) {
+          totalRewards = payments.reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
+        }
+
+        if (mounted) {
+          setStats({
+            reputation: authUser?.rating || 5.0,
+            reputationCount: 0,
+            rewardsAmount: formatCurrency(totalRewards),
+            rewardsPercentage: 0,
+          });
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    fetchData();
+
+    return () => { mounted = false; };
+  }, [authUser]);
 
   const handleEditProfile = () => {
     console.log('Edit profile clicked');
@@ -28,47 +105,17 @@ export default function UserProfilePage() {
     console.log('View all activities clicked');
   };
 
-  const activities: ActivityItem[] = [
-    {
-      id: '1',
-      type: 'reward',
-      title: 'Recompensa Recebida',
-      description: 'MacBook Pro - Devolução em Curitiba',
-      value: 'R$ 500,00',
-      date: '12 Mai, 2024',
-      icon: 'payments',
-    },
-    {
-      id: '2',
-      type: 'item',
-      title: 'Novo Item Localizado',
-      description: 'Chaves de carro - Shopping Estação',
-      value: 'Status: Validando',
-      date: '08 Mai, 2024',
-      icon: 'package_2',
-    },
-    {
-      id: '3',
-      type: 'badge',
-      title: 'Badge Conquistada',
-      description: 'Localizador Ouro - 10 Devoluções com sucesso',
-      value: '+100 XP',
-      date: '01 Mai, 2024',
-      icon: 'stars',
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col">
       <Header user={authUser} />
-
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-8 py-8">
+      
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-8 py-8 mb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar */}
           <aside className="lg:col-span-3 space-y-6">
             <ProfileCard
-              name={authUser?.name || 'Alex Silva'}
-              memberSince="Jan 2024"
+              name={authUser?.name || 'Carregando...'}
+              memberSince={authUser?.created_at ? new Date(authUser.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }) : ''}
               avatar={
                 authUser?.avatar_url ||
                 'https://lh3.googleusercontent.com/aida-public/AB6AXuAVy0vV20I4kYG1gkw1vygpD4M8pup2LP4t04iJmFu4NBio3pQndWBe37Ivb67-iLBnd2AciQEAyYh_ditEhkxXjzp3zKXS9SUkrOpEYQ61SJ_lyjX2LbPa6w8lzhfPptI9tUMKVDQCOLB_llrlih9mZ2WBAvpB0o7ygUvxiqnDrTU5kQeqTBXEfvqmJTWjZyEH4lb2DhrErWiXHPkkT2HpycDrZGQh2fqY3JMzK01P2ljlqybd-aF1GiZCytG_6VEI7DK4SstObRY'
@@ -88,25 +135,35 @@ export default function UserProfilePage() {
             />
 
             {/* Stats Metrics */}
-            <StatsMetrics
-              reputation={4.9}
-              reputationCount={128}
-              rewardsAmount="R$ 1.240"
-              rewardsPercentage={12}
-              rankingPosition={42}
-              rankingBadge="Ouro"
-            />
+            {loading ? (
+              <div className="h-32 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            ) : (
+              <StatsMetrics
+                reputation={stats.reputation}
+                reputationCount={stats.reputationCount}
+                rewardsAmount={stats.rewardsAmount}
+                rewardsPercentage={stats.rewardsPercentage}
+                rankingPosition={authUser?.rank_position || 1}
+                rankingBadge={authUser?.level || "Bronze"}
+              />
+            )}
 
             {/* Activity History */}
-            <ActivityHistory
-              activities={activities}
-              onViewAll={handleViewAllActivities}
-            />
+            {loading ? (
+              <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            ) : (
+              <ActivityHistory
+                activities={activities.length > 0 ? activities : [
+                  { id: 'empty', type: 'reward', title: 'Nenhuma atividade', description: 'Comece a explorar o sistema!', value: '', date: '', icon: 'info' }
+                ]}
+                onViewAll={handleViewAllActivities}
+              />
+            )}
 
             {/* Bottom Section: Ranking + Badges */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <GlobalRanking />
-              <BadgesHonor progressPercentage={80} nextLevel="Platina" />
+              <BadgesHonor progressPercentage={80} nextLevel="Plata" />
             </div>
           </div>
         </div>

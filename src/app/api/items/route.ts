@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-export const dynamic = 'force-dynamic';
 
 import { supabase } from "@/lib/supabase";
-import { ItemService } from "@/services/item.service";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { GamificationService } from "@/services/gamification.service";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,21 +12,36 @@ export async function GET(req: NextRequest) {
     const finderId = searchParams.get("finder_id");
     const category = searchParams.get("category");
     const city = searchParams.get("city");
+    const state = searchParams.get("state");
+    const status = searchParams.get("status");
+    const q = searchParams.get("q")?.trim();
 
     const filters: any = {};
     if (category) filters.category = category;
     if (city) filters.city = city;
     if (finderId) filters.finder_id = finderId;
+    if (state) filters.state = state;
+    if (status) filters.status = status;
 
     let query = supabase.from("found_items").select("*");
 
     if (filters.category) query = query.eq("category", filters.category);
     if (filters.city) query = query.eq("city", filters.city);
     if (filters.finder_id) query = query.eq("finder_id", filters.finder_id);
+    if (filters.state) query = query.eq("state", filters.state);
+    if (filters.status) query = query.eq("status", filters.status);
+    if (q) {
+      const safeQuery = q.replace(/[,%]/g, " ");
+      query = query.or(
+        `title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%,city.ilike.%${safeQuery}%,state.ilike.%${safeQuery}%`
+      );
+    }
 
     const { data, error } = await query.order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
@@ -36,25 +52,66 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const authSupabase = await createServerSupabaseClient();
     const {
       data: { user: authUser },
-    } = await supabase.auth.getUser();
+    } = await authSupabase.auth.getUser();
 
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
+    const {
+      title,
+      description,
+      category,
+      city,
+      state,
+      reward_value,
+      photo_url,
+      location_lat,
+      location_lng,
+    } = body ?? {};
 
-    const item = await ItemService.createItem(authUser.id, body);
+    if (!title || !category || !city || !state) {
+      return NextResponse.json(
+        { error: "Campos obrigatorios: title, category, city e state." },
+        { status: 400 }
+      );
+    }
 
-    // Add XP reward for registering item
-    await GamificationService.rewardItemRegistration(authUser.id);
+    const { data: item, error } = await authSupabase
+      .from("found_items")
+      .insert([
+        {
+          title,
+          description: description?.trim() || null,
+          category,
+          city: city.trim(),
+          state: state.trim().toUpperCase(),
+          reward_value: Number(reward_value ?? 0),
+          photo_url: photo_url ?? null,
+          location_lat: location_lat ?? null,
+          location_lng: location_lng ?? null,
+          finder_id: authUser.id,
+          status: "available",
+        },
+      ])
+      .select("*")
+      .single();
 
-    return NextResponse.json(
-      { success: true, data: item },
-      { status: 201 }
-    );
+    if (error || !item) {
+      throw error ?? new Error("Falha ao criar item");
+    }
+
+    try {
+      await GamificationService.rewardItemRegistration(authUser.id);
+    } catch (rewardError) {
+      console.error("Error rewarding item registration:", rewardError);
+    }
+
+    return NextResponse.json({ success: true, data: item }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating item:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
-import { supabase } from "@/lib/supabase";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { UserService } from "@/services/user.service";
 
 export async function GET() {
   try {
+    const supabase = await createServerSupabaseClient();
     const {
       data: { user: authUser },
     } = await supabase.auth.getUser();
@@ -29,6 +30,7 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
     const {
       data: { user: authUser },
     } = await supabase.auth.getUser();

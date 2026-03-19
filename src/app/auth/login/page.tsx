@@ -3,35 +3,87 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { hasSupabaseConfig } from "@/lib/supabase";
+import { supabaseBrowser as supabase } from "@/lib/supabase-browser";
+
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [nextPath, setNextPath] = useState("/dashboard/owner");
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const next = searchParams.get("next");
+    const registered = searchParams.get("registered") === "true";
+    const confirmation = searchParams.get("confirmation");
+    const queryError = searchParams.get("error");
+    const hashError = hashParams.get("error_description");
+
+    if (next?.startsWith("/")) {
+      setNextPath(next);
+    }
+
+    if (registered) {
+      setNotice(
+        confirmation === "email"
+          ? "Conta criada. Confirme o email enviado pelo Supabase antes de tentar entrar."
+          : "Conta criada. Agora faca login para continuar."
+      );
+    }
+
+    const queryMsg = searchParams.get("msg");
+    if (queryError === "oauth_callback") {
+      setError(
+        queryMsg ? decodeURIComponent(queryMsg) : "Falha ao concluir o login com Google. Confira as Redirect URLs do Supabase para localhost."
+      );
+    }
+
+    if (hashError) {
+      setError(decodeURIComponent(hashError));
+    }
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     setLoading(true);
 
+    if (!hasSupabaseConfig) {
+      setError("Configuracao do Supabase ausente.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
-      if (authError) throw authError;
+      const payload = await response.json();
 
-      router.push("/dashboard");
+      if (!response.ok) {
+        throw new Error(payload.error || "Erro ao fazer login");
+      }
+
+      router.push(nextPath);
+      router.refresh();
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login");
     } finally {
@@ -41,9 +93,26 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setError(null);
+    setNotice(null);
+
+    if (!hasSupabaseConfig) {
+      setError("Configuracao do Supabase ausente.");
+      return;
+    }
+
     try {
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      callbackUrl.searchParams.set("next", nextPath);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
+        options: {
+          redirectTo: callbackUrl.toString(),
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        },
       });
       if (error) throw error;
     } catch (err: any) {
@@ -55,7 +124,7 @@ export default function LoginPage() {
     return <div className="min-h-screen bg-[#030712]" />;
   }
 
-  const isConfigMissing = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isConfigMissing = !hasSupabaseConfig;
 
   return (
     <div className="min-h-screen w-full flex bg-[#030712] overflow-hidden font-sans selection:bg-primary/30 selection:text-primary-foreground">
@@ -183,6 +252,17 @@ export default function LoginPage() {
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                 {error}
+              </motion.div>
+            )}
+
+            {notice && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm rounded-2xl flex items-center gap-3"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                {notice}
               </motion.div>
             )}
 

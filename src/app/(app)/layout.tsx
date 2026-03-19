@@ -1,18 +1,29 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { redirect } from "next/navigation";
 
-export default function AppLayout({
-    children,
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { AppShell } from "@/components/layout/AppShell";
+import { ensureUserProfile } from "@/lib/auth-profile";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+
+export default async function AppLayout({
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1 container py-8">
-                {children}
-            </main>
-            <Footer />
-        </div>
-    );
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  const profile = await ensureUserProfile(user);
+
+  return (
+    <AuthProvider initialUser={profile}>
+      <AppShell initialUser={profile}>{children}</AppShell>
+    </AuthProvider>
+  );
 }

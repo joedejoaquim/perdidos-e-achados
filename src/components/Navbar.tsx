@@ -3,12 +3,18 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth, useLogout } from "@/hooks/useAuth";
+import { User } from "@/types";
 import { motion } from "framer-motion";
 
-export const Navbar = () => {
-  const { user } = useAuth();
+interface NavbarProps {
+  initialUser?: User | null;
+}
+
+export const Navbar = ({ initialUser = null }: NavbarProps) => {
+  const { user: hydratedUser } = useAuth({ enabled: !initialUser });
   const logout = useLogout();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const user = initialUser ?? hydratedUser;
 
   return (
     <motion.nav

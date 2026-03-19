@@ -1,41 +1,78 @@
+'use client';
+
 import React from "react";
+import { motion } from "framer-motion";
 
 interface StatsCardProps {
   label: string;
   value: string | number;
   icon: string;
+  trend?: {
+    value: number;
+    isUp: boolean;
+  };
   color: "primary" | "green" | "blue" | "yellow" | "red";
+  delay?: number;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
   label,
   value,
   icon,
+  trend,
   color,
+  delay = 0
 }) => {
-  const colorClasses: Record<string, string> = {
-    primary:
-      "text-primary dark:text-blue-400 border-primary/20 dark:border-blue-500/20",
-    green:
-      "text-green-500 dark:text-green-400 border-green-200 dark:border-green-900/30",
-    blue:
-      "text-blue-500 dark:text-blue-400 border-blue-200 dark:border-blue-900/30",
-    yellow:
-      "text-yellow-500 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/30",
-    red: "text-red-500 dark:text-red-400 border-red-200 dark:border-red-900/30",
+  const colorMap = {
+    primary: "from-blue-500/20 to-indigo-500/5 text-blue-600 dark:text-blue-400 border-blue-200/50 dark:border-blue-500/20 icon-bg-blue-500/10",
+    green: "from-emerald-500/20 to-teal-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-500/20 icon-bg-emerald-500/10",
+    blue: "from-sky-500/20 to-blue-500/5 text-sky-600 dark:text-sky-400 border-sky-200/50 dark:border-sky-500/20 icon-bg-sky-500/10",
+    yellow: "from-amber-500/20 to-yellow-500/5 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-500/20 icon-bg-amber-500/10",
+    red: "from-rose-500/20 to-red-500/5 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20 icon-bg-rose-500/10",
   };
 
   return (
-    <div className={`bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 ${colorClasses[color]}`}>
-      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-        {label}
-      </p>
-      <div className="flex items-end gap-2 mt-2">
-        <p className={`text-2xl font-black ${colorClasses[color]}`}>
-          {value}
-        </p>
-        <span className="text-2xl mb-1">{icon}</span>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className={`relative overflow-hidden bg-white dark:bg-slate-900/60 backdrop-blur-md p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:shadow-xl transition-all group`}
+    >
+      {/* Background Glow */}
+      <div className={`absolute -right-4 -top-4 w-24 h-24 blur-3xl rounded-full bg-gradient-to-br ${colorMap[color]} opacity-30`} />
+      
+      <div className="flex justify-between items-start relative z-10">
+        <div className="space-y-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            {label}
+          </p>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {value}
+            </h3>
+            {trend && (
+              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${trend.isUp ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'}`}>
+                <span className="material-symbols-outlined text-[12px]">{trend.isUp ? 'trending_up' : 'trending_down'}</span>
+                {trend.value}%
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner border border-white/20 transition-transform group-hover:scale-110 duration-300`}>
+          <span className="material-symbols-outlined">{icon}</span>
+        </div>
       </div>
-    </div>
+
+      <div className="mt-4 h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: "70%" }}
+          transition={{ duration: 1, delay: delay + 0.5 }}
+          className={`h-full bg-gradient-to-r from-primary to-orange-400 rounded-full`} 
+        />
+      </div>
+    </motion.div>
   );
 };

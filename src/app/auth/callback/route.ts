@@ -1,16 +1,50 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { ensureUserProfile } from "@/lib/auth-profile";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 
 export async function GET(request: Request) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
+  const { searchParams, origin } = new URL(request.url);
+  const code = searchParams.get("code");
+  // Se redirecionamento for nulo, volta para a rota padrão do dashboard
+  const next = searchParams.get("next") || "/dashboard/owner";
 
-  if (code) {
-    const supabase = createRouteHandlerClient({ cookies });
-    await supabase.auth.exchangeCodeForSession(code);
+  if (!code) {
+    console.error("DEBUG: Missing OAuth code in callback");
+    return NextResponse.redirect(new URL("/auth/login?error=missing_code", origin));
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL("/dashboard", request.url));
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    console.error("DEBUG: Error exchanging code for session:", error.message);
+    const errorUrl = new URL("/auth/login", origin);
+    errorUrl.searchParams.set("error", "oauth_callback");
+    errorUrl.searchParams.set("msg", error.message);
+    return NextResponse.redirect(errorUrl);
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    try {
+      // Sincroniza o perfil do usuário (Google -> Tabela public.users)
+      await ensureUserProfile(user);
+    } catch (profileError) {
+      console.error("DEBUG: Profile sync error (non-blocking):", profileError);
+    }
+  }
+
+  // Melhora na lógica de redirecionamento para evitar LOOPS no localhost
+  // Se estivermos em produção atrás de um proxy, garantimos que o origin seja respeitado
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const isProd = process.env.NODE_ENV !== "development";
+  
+  if (isProd && forwardedHost) {
+    const protocol = request.headers.get("x-forwarded-proto") || "https";
+    return NextResponse.redirect(`${protocol}://${forwardedHost}${next}`);
+  }
+
+  // No localhost, usamos o origin detectado da requisição
+  return NextResponse.redirect(new URL(next, origin));
 }
