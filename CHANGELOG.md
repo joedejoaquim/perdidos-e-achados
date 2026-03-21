@@ -7,6 +7,17 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt_BR/).
 
 ---
 
+## [1.0.1] - 2026-03-20
+
+### 🔧 Infraestrutura & Auth
+- [x] Migração para o novo banco de dados (Integração Vercel + Supabase)
+- [x] Atualização de variáveis de ambiente no `.env.local`
+- [x] Reconfiguração e ativação do Google OAuth no novo projeto
+- [x] Sincronização da URL de redirecionamento (Callback URI)
+- [x] Setup do schema inicial no novo banco de dados
+
+---
+
 ## [1.0.0] - 2026-03-12
 
 ### ✨ Added (Adicionado)
@@ -189,4 +200,4 @@ ACHADOS usa [Semantic Versioning](https://semver.org/lang/pt_BR/):
 
 ---
 
-**Última atualização**: 12 de Março de 2026
+**Última atualização**: 20 de Março de 2026

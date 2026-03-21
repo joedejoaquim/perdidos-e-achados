@@ -1,6 +1,6 @@
 {
   "name": "achados-platform",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Plataforma Digital de Localização de Documentos Perdidos",
   "private": true,
   "scripts": {
