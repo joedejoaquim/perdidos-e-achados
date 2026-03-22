@@ -37,6 +37,7 @@ export const Navbar = () => {
               </Link>
               <div className="flex items-center gap-3 border-l border-border/40 pl-6">
                 {user.avatar_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={user.avatar_url}
                     alt="Avatar"

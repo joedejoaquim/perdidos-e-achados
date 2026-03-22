@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
+import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 
 import { GamificationService } from "@/services/gamification.service";
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     // Handle payment_intent.succeeded
     if (event.type === "payment_intent.succeeded") {
-      const paymentIntent = event.data.object as any;
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
       // Get payment record
       const { data: payment } = await supabase
@@ -53,8 +54,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Webhook error:", err);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json({ error: (err as Error).message }, { status: 400 });
   }
 }

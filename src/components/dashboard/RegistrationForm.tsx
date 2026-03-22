@@ -247,6 +247,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       key={index}
                       className="relative group rounded-lg overflow-hidden h-20 bg-slate-200 dark:bg-slate-800"
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={URL.createObjectURL(photo)}
                         alt={`Preview ${index + 1}`}

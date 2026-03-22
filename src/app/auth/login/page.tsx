@@ -32,8 +32,8 @@ export default function LoginPage() {
       if (authError) throw authError;
 
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Erro ao fazer login");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Erro ao fazer login");
     } finally {
       setLoading(false);
     }
@@ -49,8 +49,8 @@ export default function LoginPage() {
         },
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err.message || "Erro ao fazer login com Google");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Erro ao fazer login com Google");
     }
   };
 

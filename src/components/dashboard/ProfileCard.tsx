@@ -70,6 +70,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <div className="relative">
           <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-blue-400 p-1">
             {user.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 alt={user.name}
                 className="w-full h-full rounded-full bg-white object-cover"
@@ -118,7 +119,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
         <p className="text-xs text-slate-500 dark:text-slate-400 italic flex items-center gap-1">
           <span>ℹ️</span>
-          Faltam {xpToNextLevel} XP para o selo "Guardião Lendário"
+          Faltam {xpToNextLevel} XP para o selo &ldquo;Guardião Lendário&rdquo;
         </p>
       </div>
 

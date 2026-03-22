@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { LEVEL_THRESHOLDS, getXpToNextLevel } from "@/utils/helpers";
 
@@ -170,12 +169,11 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({ users, limit = 10 })
               #{index + 1}
             </div>
             {user.avatar_url && (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={user.avatar_url}
                 alt={user.name}
-                width={32}
-                height={32}
-                className="rounded-full"
+                className="w-8 h-8 rounded-full"
               />
             )}
             <div className="flex-1">

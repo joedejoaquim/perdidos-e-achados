@@ -84,6 +84,7 @@ export default function GlobalRanking({
                   className="size-8 rounded-full bg-white/20 overflow-hidden flex-shrink-0"
                   data-alt={`${user.name} profile thumbnail`}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     alt={user.name}
                     className="w-full h-full object-cover"

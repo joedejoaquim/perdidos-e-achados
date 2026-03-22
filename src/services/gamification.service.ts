@@ -134,7 +134,7 @@ export class GamificationService {
     const newLevel = calculateLevel(user.xp);
 
     if (newLevel !== user.level) {
-      await UserService.updateUser(userId, { level: newLevel as any });
+      await UserService.updateUser(userId, { level: newLevel as import("@/types").UserLevel });
 
       // Log activity
       await supabase.from("activities").insert([

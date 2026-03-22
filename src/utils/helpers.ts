@@ -201,7 +201,7 @@ export const storage = {
     const item = localStorage.getItem(key);
     if (!item) return defaultValue ?? null;
     try {
-      return JSON.parse(item) as T;
+      return JSON.parse(item);
     } catch {
       return item as unknown as T;
     }

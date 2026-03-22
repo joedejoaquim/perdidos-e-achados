@@ -69,7 +69,7 @@ export default function FinderDashboard() {
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors duration-300 flex flex-col">
-      <Header user={user || (authUser as any)} />
+      <Header user={user ?? authUser} />
 
       <main className="max-w-7xl mx-auto w-full px-4 md:px-10 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1">
         {/* Left Column: Profile + Stats */}

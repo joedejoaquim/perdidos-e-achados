@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const city = searchParams.get("city");
 
-    const filters: any = {};
+    const filters: Record<string, string> = {};
     if (category) filters.category = category;
     if (city) filters.city = city;
     if (finderId) filters.finder_id = finderId;
@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
       { success: true, data: item },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating item:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }

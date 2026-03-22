@@ -17,12 +17,13 @@ export default function SearchPage() {
 
   useEffect(() => {
     loadItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const loadItems = async () => {
     try {
       setLoading(true);
-      const searchFilters: any = {};
+      const searchFilters: Record<string, string> = {};
 
       if (filters.category) searchFilters.category = filters.category;
       if (filters.city) searchFilters.city = filters.city;
