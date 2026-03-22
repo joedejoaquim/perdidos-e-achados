@@ -37,8 +37,8 @@ export const useAuth = () => {
         }
 
         setUser(userData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+      } catch (err: any) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -47,7 +47,18 @@ export const useAuth = () => {
     checkAuth();
 
     // Subscribe to auth changes
-    const { data } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        // Re-fetch profile after OAuth login
+        const { data: userData } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (userData) setUser(userData);
+      }
+
       if (event === "SIGNED_OUT") {
         setUser(null);
         router.push("/auth/login");

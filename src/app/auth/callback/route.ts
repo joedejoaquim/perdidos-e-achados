@@ -13,9 +13,9 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error("Erro ao trocar code por sessão:", error);
-      return NextResponse.redirect(`${requestUrl.origin}/login`);
+      return NextResponse.redirect(new URL("/auth/login", request.url));
     }
   }
 
-  return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+  return NextResponse.redirect(new URL("/dashboard", request.url));
 }
