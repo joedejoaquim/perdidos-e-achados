@@ -20,6 +20,7 @@ export async function POST(request: Request) {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
+    // 1. Criar o usuário no Auth do Supabase
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email: normalizedEmail,
       password: String(password),
@@ -31,16 +32,39 @@ export async function POST(request: Request) {
     });
 
     if (error || !data.user) {
+      // Se o usuário já existe no Auth, retornar erro amigável
+      if (error?.message?.includes("already been registered") || error?.message?.includes("already exists")) {
+        return NextResponse.json(
+          { error: "Este email já está cadastrado. Tente fazer login." },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json(
         { error: error?.message || "Nao foi possivel criar a conta." },
         { status: 400 }
       );
     }
 
-    await ensureUserProfile(data.user, {
-      name: String(name).trim(),
-      phone: String(phone || "").trim(),
-    });
+    // 2. Sincronizar o perfil na tabela public.users
+    // O Trigger pode já ter feito isso, então ensureUserProfile usa upsert
+    try {
+      await ensureUserProfile(data.user, {
+        name: String(name).trim(),
+        phone: String(phone || "").trim(),
+      });
+    } catch (profileError: any) {
+      // Se o erro for de duplicata (o Trigger já criou), ignoramos
+      if (
+        profileError?.message?.includes("duplicate key") ||
+        profileError?.message?.includes("unique constraint")
+      ) {
+        console.warn("Profile already created by trigger, skipping.");
+      } else {
+        // Logamos o erro mas não falhamos — o usuário já foi criado no Auth
+        console.error("Profile sync error (non-blocking):", profileError);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

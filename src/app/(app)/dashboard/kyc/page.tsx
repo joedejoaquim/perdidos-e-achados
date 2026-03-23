@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
@@ -45,7 +45,7 @@ export default function KYCPage() {
       <Header user={user} />
       
       <main className="flex-1 max-w-4xl mx-auto w-full p-4 md:p-8 flex flex-col items-center justify-center">
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
@@ -77,7 +77,7 @@ export default function KYCPage() {
               </div>
 
               <AnimatePresence mode="wait">
-                <motion.div 
+                <m.div 
                   key={step} 
                   initial={{ opacity: 0, x: 20 }} 
                   animate={{ opacity: 1, x: 0 }} 
@@ -90,7 +90,7 @@ export default function KYCPage() {
                   <button className="px-6 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-white shadow-sm hover:shadow-md transition-all">
                     Selecionar Arquivo
                   </button>
-                </motion.div>
+                </m.div>
               </AnimatePresence>
 
               <div className="mt-8 flex justify-end">
@@ -104,17 +104,18 @@ export default function KYCPage() {
               </div>
             </>
           ) : (
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-12">
+            <m.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-12">
                <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20">
                  <span className="material-symbols-outlined text-[48px]">check_circle</span>
                </div>
                <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">Documentos Recebidos!</h2>
                <p className="text-slate-500">Sua verificação KYC está em análise de segurança. O status será atualizado em até 24 horas.</p>
                <button onClick={() => window.location.assign('/dashboard/owner')} className="mt-8 px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Voltar ao Dashboard</button>
-            </motion.div>
+            </m.div>
           )}
-        </motion.div>
+        </m.div>
       </main>
     </div>
   );
 }
+

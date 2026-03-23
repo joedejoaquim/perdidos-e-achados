@@ -106,9 +106,12 @@ function applyItemFilters(query: any, filters: ItemFilters) {
 export async function GET(req: NextRequest) {
   try {
     const authSupabase = await createServerSupabaseClient();
+    // Use getSession() for speed — the middleware already validated the user
     const {
-      data: { user: authUser },
-    } = await authSupabase.auth.getUser();
+      data: { session },
+    } = await authSupabase.auth.getSession();
+
+    const authUser = session?.user;
 
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

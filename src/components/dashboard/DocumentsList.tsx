@@ -1,6 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   Badge,
   ChevronRight,
@@ -212,7 +212,7 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
           const CategoryIcon = categoryMeta.icon;
 
           return (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -268,10 +268,12 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
                   </span>
                 </Link>
               </div>
-            </motion.div>
+            </m.div>
           );
         })}
       </div>
     </section>
   );
 };
+
+

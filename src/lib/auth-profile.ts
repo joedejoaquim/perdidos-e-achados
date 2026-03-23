@@ -78,7 +78,7 @@ export async function ensureUserProfile(
   if (!existingProfile) {
     const { data, error } = await supabaseAdmin
       .from("users")
-      .insert([payload])
+      .upsert([payload], { onConflict: "id" })
       .select("*")
       .single();
 

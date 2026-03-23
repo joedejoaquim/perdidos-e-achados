@@ -44,9 +44,14 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  // Use getSession() instead of getUser() for performance
+  // getSession() reads from the local JWT cookie (instant)
+  // getUser() makes a network call to Supabase (200-500ms)
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user ?? null;
 
   const { pathname, search } = request.nextUrl;
   const isProtectedRoute = matchesRoute(pathname, protectedRoutes);

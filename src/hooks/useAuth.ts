@@ -58,9 +58,13 @@ async function resolveAuthSnapshot(): Promise<AuthSnapshot> {
 
   pendingAuthSnapshot = (async () => {
     try {
+      // Use getSession() instead of getUser() for speed
+      // getSession() reads from the local JWT (instant), getUser() calls the network
       const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const authUser = session?.user;
 
       if (!authUser) {
         return { user: null, error: null };
@@ -214,10 +218,26 @@ export const useLogout = () => {
   const authContext = useOptionalAuthContext();
 
   const logout = async () => {
+    try {
+      // First, attempt server-side logout to clear cookies
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Server-side logout error:", e);
+    }
+
+    try {
+      // Also do client-side logout
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("Client-side logout error:", e);
+    }
+
+    // Reset local state
     resetAuthSnapshot({ user: null, error: null });
     authContext?.setUser(null);
     authContext?.setError(null);
-    await supabase.auth.signOut();
+
+    // Hard redirect to login to clear all memory
     window.location.href = "/auth/login";
   };
 

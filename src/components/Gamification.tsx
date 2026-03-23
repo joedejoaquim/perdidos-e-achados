@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { LEVEL_THRESHOLDS, getXpToNextLevel } from "@/utils/helpers";
 
 interface XPProgressBarProps {
@@ -37,13 +37,13 @@ export const XPProgressBar: React.FC<XPProgressBarProps> = ({ xp, level }) => {
 
   const getLevelEmoji = (lvl: string) => {
     const emojis: Record<string, string> = {
-      bronze: "🥉",
-      silver: "⭐",
-      gold: "🥇",
-      platinum: "💎",
-      legend: "👑",
+      bronze: "ðŸ¥‰",
+      silver: "â­",
+      gold: "ðŸ¥‡",
+      platinum: "ðŸ’Ž",
+      legend: "ðŸ‘‘",
     };
-    return emojis[lvl] || "🏅";
+    return emojis[lvl] || "ðŸ…";
   };
 
   return (
@@ -64,7 +64,7 @@ export const XPProgressBar: React.FC<XPProgressBarProps> = ({ xp, level }) => {
       </div>
 
       <div className="relative w-full h-2 bg-secondary rounded-full overflow-hidden">
-        <motion.div
+        <m.div
           className={`h-full ${getLevelColor(level)}`}
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(progress, 100)}%` }}
@@ -85,18 +85,18 @@ export const BadgeGrid: React.FC<BadgeGridProps> = ({ badges, layout = "grid" })
     return (
       <div className="flex gap-4 overflow-x-auto pb-2">
         {badges.map((badge) => (
-          <motion.div
+          <m.div
             key={badge.id}
             whileHover={{ scale: 1.1 }}
             className="flex-shrink-0 text-center"
           >
             <div className="w-16 h-16 rounded-lg bg-secondary/50 flex items-center justify-center text-2xl mb-2">
-              {badge.badges?.icon || "🏅"}
+              {badge.badges?.icon || "ðŸ…"}
             </div>
             <p className="text-xs font-medium text-center line-clamp-2">
               {badge.badges?.name}
             </p>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     );
@@ -105,18 +105,18 @@ export const BadgeGrid: React.FC<BadgeGridProps> = ({ badges, layout = "grid" })
   return (
     <div className="grid grid-cols-4 gap-4">
       {badges.map((badge) => (
-        <motion.div
+        <m.div
           key={badge.id}
           whileHover={{ scale: 1.05 }}
           className="text-center"
         >
           <div className="w-full aspect-square rounded-lg bg-secondary/50 flex items-center justify-center text-3xl mb-2">
-            {badge.badges?.icon || "🏅"}
+            {badge.badges?.icon || "ðŸ…"}
           </div>
           <p className="text-xs font-medium line-clamp-2">
             {badge.badges?.name}
           </p>
-        </motion.div>
+        </m.div>
       ))}
     </div>
   );
@@ -137,19 +137,19 @@ interface RankingBoardProps {
 export const RankingBoard: React.FC<RankingBoardProps> = ({ users, limit = 10 }) => {
   const getLevelEmoji = (level: string) => {
     const emojis: Record<string, string> = {
-      bronze: "🥉",
-      silver: "⭐",
-      gold: "🥇",
-      platinum: "💎",
-      legend: "👑",
+      bronze: "ðŸ¥‰",
+      silver: "â­",
+      gold: "ðŸ¥‡",
+      platinum: "ðŸ’Ž",
+      legend: "ðŸ‘‘",
     };
-    return emojis[level] || "🏅";
+    return emojis[level] || "ðŸ…";
   };
 
   return (
     <div className="space-y-2">
       {users.slice(0, limit).map((user, index) => (
-        <motion.div
+        <m.div
           key={user.id}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -173,8 +173,10 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({ users, limit = 10 })
             </div>
           </div>
           <span className="text-xl">{getLevelEmoji(user.level)}</span>
-        </motion.div>
+        </m.div>
       ))}
     </div>
   );
 };
+
+

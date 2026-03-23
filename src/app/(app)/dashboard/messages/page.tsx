@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
@@ -75,7 +75,7 @@ export default function MessagesPage() {
       <Header user={user} />
       
       <main className="flex-1 flex max-w-[1440px] mx-auto w-full p-4 md:p-6 overflow-hidden max-h-[calc(100vh-80px)]">
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex w-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl"
@@ -133,11 +133,11 @@ export default function MessagesPage() {
                      <span className="bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs px-3 py-1 rounded-full">Início da conversa</span>
                    </div>
                    
-                   <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex justify-start">
+                   <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex justify-start">
                      <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-sm max-w-[70%] shadow-sm border border-slate-100 dark:border-slate-700">
                        <p className="text-sm text-slate-700 dark:text-slate-200">Olá! Este é o chat oficial para combinar a devolução do item: <strong>{chats.find(c => c.id === activeChat)?.name}</strong>. Como posso ajudar?</p>
                      </div>
-                   </motion.div>
+                   </m.div>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
@@ -165,8 +165,9 @@ export default function MessagesPage() {
               </div>
             )}
           </div>
-        </motion.div>
+        </m.div>
       </main>
     </div>
   );
 }
+

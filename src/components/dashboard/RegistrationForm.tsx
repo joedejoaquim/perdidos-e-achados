@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import { Camera, CheckCircle2, ImagePlus, MapPin, PlusCircle, Trash2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 import { ItemService } from "@/services/item.service";
 import { ItemCategory } from "@/types";
@@ -156,13 +156,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       <AnimatePresence>
         {success && (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
           >
-            <motion.div 
+            <m.div 
               initial={{ y: 20 }}
               animate={{ y: 0 }}
               className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-200 dark:border-slate-800"
@@ -173,15 +173,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Sucesso Total!</h3>
               <p className="text-slate-500 dark:text-slate-400 mb-6">Seu achado foi registrado e já está visível para a rede de proprietários.</p>
               <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <motion.div 
+                <m.div 
                   initial={{ width: "100%" }}
                   animate={{ width: "0%" }}
                   transition={{ duration: 2.2 }}
                   className="h-full bg-emerald-500"
                 />
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -373,3 +373,5 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     </section>
   );
 };
+
+

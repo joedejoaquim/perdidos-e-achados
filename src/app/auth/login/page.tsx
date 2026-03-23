@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 import { hasSupabaseConfig } from "@/lib/supabase";
 import { supabaseBrowser as supabase } from "@/lib/supabase-browser";
@@ -130,26 +130,26 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex bg-[#030712] overflow-hidden font-sans selection:bg-primary/30 selection:text-primary-foreground">
       {/* Background Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
+        <m.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.2, 0.3, 0.2],
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px]" 
+          className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px]"
         />
-        <motion.div 
+        <m.div
           animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.1, 0.15, 0.1],
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[120px]" 
+          className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[120px]"
         />
       </div>
 
       {/* Left Side: Art & Branding (Hidden on mobile) */}
-      <motion.div
+      <m.div
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -165,7 +165,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 space-y-6">
-          <motion.h2
+          <m.h2
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -173,15 +173,15 @@ export default function LoginPage() {
           >
             Sua jornada de <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">honestidade</span> começa aqui.
-          </motion.h2>
-          <motion.p
+          </m.h2>
+          <m.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="text-gray-400 text-xl max-w-md font-light leading-relaxed"
           >
             A plataforma mais segura para devolver o que foi encontrado e ser recompensado.
-          </motion.p>
+          </m.p>
         </div>
 
         <div className="relative z-10 flex items-center gap-6 text-sm text-gray-400 font-medium">
@@ -198,11 +198,11 @@ export default function LoginPage() {
         {/* Decorative Grid */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none overflow-hidden"
           style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-      </motion.div>
+      </m.div>
 
       {/* Right Side: Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative z-10">
-        <motion.div
+        <m.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -210,7 +210,7 @@ export default function LoginPage() {
         >
           <div className="bg-white/[0.02] border border-white/[0.08] backdrop-blur-3xl rounded-[40px] p-8 sm:p-12 shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
+
             {/* Mobile Branding */}
             <div className="lg:hidden flex justify-center mb-10">
               <div className="w-12 h-12 bg-gradient-to-br from-primary to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -225,14 +225,14 @@ export default function LoginPage() {
 
             <AnimatePresence>
               {isConfigMissing && !loading && (
-                <motion.div
+                <m.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   className="mb-8 p-5 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-start gap-4 overflow-hidden"
                 >
                   <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
-                    <span className="text-xl">🛠️</span>
+                    <span className="text-xl">ðŸ› ï¸</span>
                   </div>
                   <div>
                     <h4 className="font-bold text-orange-400 mb-1 leading-tight">Configuração Supabase</h4>
@@ -240,30 +240,30 @@ export default function LoginPage() {
                       Chaves não detectadas. Verifique seu <code>.env.local</code>.
                     </p>
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
             {error && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-2xl flex items-center gap-3"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                 {error}
-              </motion.div>
+              </m.div>
             )}
 
             {notice && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm rounded-2xl flex items-center gap-3"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 {notice}
-              </motion.div>
+              </m.div>
             )}
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -292,7 +292,7 @@ export default function LoginPage() {
                 <div className="relative group/input">
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-white/[0.03] border border-white/[0.1] text-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all duration-300 placeholder:text-gray-700 group-hover/input:border-white/[0.2]"
@@ -352,8 +352,10 @@ export default function LoginPage() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );
 }
+
+

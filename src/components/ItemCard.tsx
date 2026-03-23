@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { FoundItem } from "@/types";
 import { formatCurrency, formatDate } from "@/utils/helpers";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface ItemCardProps {
   item: FoundItem;
@@ -19,16 +19,16 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const getCategoryEmoji = (category: string) => {
     const emojis: Record<string, string> = {
-      document: "📄",
-      electronic: "📱",
-      key: "🔑",
-      other: "📦",
+      document: "ðŸ“„",
+      electronic: "ðŸ“±",
+      key: "ðŸ”‘",
+      other: "ðŸ“¦",
     };
-    return emojis[category] || "📦";
+    return emojis[category] || "ðŸ“¦";
   };
 
   return (
-    <motion.div
+    <m.div
       whileHover={{ scale: 1.02 }}
       className="border border-border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-shadow"
     >
@@ -102,7 +102,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           </div>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 
@@ -148,3 +148,5 @@ export const ItemList: React.FC<ItemListProps> = ({ items, isLoading, onClaim })
     </div>
   );
 };
+
+

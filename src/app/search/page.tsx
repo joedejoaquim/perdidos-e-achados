@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { ItemService } from "@/services/item.service";
 import { ItemList } from "@/components/ItemCard";
 import { FoundItem, ItemCategory } from "@/types";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export default function SearchPage() {
   const [items, setItems] = useState<FoundItem[]>([]);
@@ -38,16 +38,16 @@ export default function SearchPage() {
   };
 
   const categories: { value: ItemCategory; label: string }[] = [
-    { value: "document", label: "📄 Documentos" },
-    { value: "electronic", label: "📱 Eletrônicos" },
-    { value: "key", label: "🔑 Chaves" },
-    { value: "other", label: "📦 Outro" },
+    { value: "document", label: "ðŸ“„ Documentos" },
+    { value: "electronic", label: "ðŸ“± Eletrônicos" },
+    { value: "key", label: "ðŸ”‘ Chaves" },
+    { value: "other", label: "ðŸ“¦ Outro" },
   ];
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-8"
@@ -56,10 +56,10 @@ export default function SearchPage() {
         <p className="text-muted-foreground">
           Procure seus documentos ou objetos perdidos
         </p>
-      </motion.div>
+      </m.div>
 
       {/* Filters */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -124,7 +124,7 @@ export default function SearchPage() {
             Limpar filtros
           </button>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Results */}
       <div>
@@ -138,3 +138,5 @@ export default function SearchPage() {
     </div>
   );
 }
+
+

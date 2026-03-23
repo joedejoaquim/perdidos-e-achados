@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { memo } from "react";
+import { m } from "framer-motion";
 
 interface StatsCardProps {
   label: string;
@@ -15,7 +15,7 @@ interface StatsCardProps {
   delay?: number;
 }
 
-export const StatsCard: React.FC<StatsCardProps> = ({
+export const StatsCard: React.FC<StatsCardProps> = memo(({
   label,
   value,
   icon,
@@ -32,10 +32,10 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+    <m.div 
+      initial={{ opacity: 0, scale: 0.98, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.4, delay }}
+      transition={{ duration: 0.3, delay }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className={`relative overflow-hidden bg-white dark:bg-slate-900/60 backdrop-blur-md p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:shadow-xl transition-all group`}
     >
@@ -66,13 +66,16 @@ export const StatsCard: React.FC<StatsCardProps> = ({
       </div>
 
       <div className="mt-4 h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-        <motion.div 
+        <m.div 
           initial={{ width: 0 }}
           animate={{ width: "70%" }}
-          transition={{ duration: 1, delay: delay + 0.5 }}
+          transition={{ duration: 0.8, delay: delay + 0.3 }}
           className={`h-full bg-gradient-to-r from-primary to-orange-400 rounded-full`} 
         />
       </div>
-    </motion.div>
+    </m.div>
   );
-};
+});
+
+StatsCard.displayName = "StatsCard";
+

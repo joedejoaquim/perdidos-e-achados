@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { isValidEmail, isValidPhone } from "@/utils/helpers";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -104,7 +104,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[#0a0a0b] flex overflow-hidden font-sans selection:bg-orange-500/30 selection:text-orange-200">
       {/* Background Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div
+        <m.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.2, 0.3],
@@ -114,7 +114,7 @@ export default function RegisterPage() {
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
           className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/20 rounded-full blur-[120px]"
         />
-        <motion.div
+        <m.div
           animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.2, 0.3, 0.2],
@@ -129,7 +129,7 @@ export default function RegisterPage() {
       <div className="flex w-full relative z-10">
         {/* Left Side: Art/Info */}
         <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden border-r border-white/5 bg-black/20 backdrop-blur-3xl">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="relative z-10"
@@ -142,10 +142,10 @@ export default function RegisterPage() {
                 ACHADOS
               </span>
             </div>
-          </motion.div>
+          </m.div>
 
           <div className="relative z-10 space-y-8">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -157,11 +157,11 @@ export default function RegisterPage() {
                 </span>
               </h1>
               <p className="text-xl text-white/50 max-w-lg font-light leading-relaxed">
-                Junte-se à maior comunidade de localização de itens e ajude a conectar o que foi perdido com quem o encontrou.
+                Junte-se Ã  maior comunidade de localização de itens e ajude a conectar o que foi perdido com quem o encontrou.
               </p>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
@@ -175,10 +175,10 @@ export default function RegisterPage() {
                 <div className="text-white font-bold text-2xl">+5k</div>
                 <div className="text-white/40 text-sm">Usuários Ativos</div>
               </div>
-            </motion.div>
+            </m.div>
           </div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.15 }}
             transition={{ duration: 2 }}
@@ -189,21 +189,21 @@ export default function RegisterPage() {
               alt="Decorative 3D Art"
               className="w-full h-full object-contain object-right-bottom scale-125 translate-x-1/4 translate-y-1/4"
             />
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="relative z-10 text-white/30 text-sm font-light"
           >
-            © 2026 Achados Platform. Todos os direitos reservados.
-          </motion.div>
+            Â© 2026 Achados Platform. Todos os direitos reservados.
+          </m.div>
         </div>
 
         {/* Right Side: Form */}
         <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-md space-y-8"
@@ -227,14 +227,14 @@ export default function RegisterPage() {
                 </div>
 
                 {error && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm flex items-center gap-3"
                   >
                     <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                     {error}
-                  </motion.div>
+                  </m.div>
                 )}
 
                 <form onSubmit={handleRegister} className="space-y-6">
@@ -310,7 +310,7 @@ export default function RegisterPage() {
                           type="password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                           className="w-full pl-12 pr-4 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder:text-white/10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-light"
                           required
                         />
@@ -329,7 +329,7 @@ export default function RegisterPage() {
                           type="password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                           className="w-full pl-12 pr-4 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder:text-white/10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-light"
                           required
                         />
@@ -371,9 +371,11 @@ export default function RegisterPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </div>
   );
 }
+
+

@@ -8,8 +8,10 @@ export async function GET() {
   try {
     const supabase = await createServerSupabaseClient();
     const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const authUser = session?.user;
 
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,8 +34,10 @@ export async function PATCH(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
     const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const authUser = session?.user;
 
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

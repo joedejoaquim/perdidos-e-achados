@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MagicMenu from "@/components/dashboard/MagicMenu";
@@ -12,7 +12,7 @@ interface HeaderProps {
   hasNotification?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header: React.FC<HeaderProps> = memo(({
   user,
   onSearchChange,
   hasNotification = false,
@@ -23,24 +23,26 @@ export const Header: React.FC<HeaderProps> = ({
   const isOwnerScreen = pathname === '/dashboard/owner';
   const logout = useLogout();
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
     onSearchChange?.(value);
-  };
+  }, [onSearchChange]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     setShowUserMenu(false);
     await logout();
-  };
+  }, [logout]);
 
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((name) => name.charAt(0))
-        .join("")
-        .toUpperCase()
-    : "?";
+  const initials = React.useMemo(() => (
+    user?.name
+      ? user.name
+          .split(" ")
+          .map((name) => name.charAt(0))
+          .join("")
+          .toUpperCase()
+      : "?"
+  ), [user?.name]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-background-dark/80 md:px-10">
@@ -65,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
             Achados
           </h2>
         </Link>
-
+        
         {!isOwnerScreen && (
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2">
             <MagicMenu searchQuery={searchQuery} onSearchChange={handleSearchChange} />
@@ -134,4 +136,6 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = "Header";

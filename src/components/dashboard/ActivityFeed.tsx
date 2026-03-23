@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState, useMemo, memo } from "react";
+import { m, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
 interface Activity {
@@ -13,6 +13,49 @@ interface Activity {
   timestamp: string;
 }
 
+// Separate Item component with memoization to avoid redundant re-renders
+const ActivityItem = memo(({ act }: { act: Activity }) => {
+  return (
+    <m.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.3 }}
+      className="group relative flex items-start gap-3 p-3 rounded-2xl border border-transparent hover:border-slate-100 dark:hover:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all cursor-default"
+    >
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner border border-white/20 transition-transform group-hover:scale-110 duration-300">
+        <span className="material-symbols-outlined text-[20px]">
+          {act.type === 'found' ? 'package_2' : act.type === 'joined' ? 'person_add' : 'payments'}
+        </span>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start">
+          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+            {act.user} <span className="font-medium text-slate-500 dark:text-slate-400">
+              {act.type === 'found' ? 'registrou um novo achado' : act.type === 'joined' ? 'entrou na plataforma' : 'recebeu uma recompensa'}
+            </span>
+          </p>
+          <span className="text-[9px] font-medium text-slate-400 shrink-0 transform-gpu group-hover:-translate-x-1 duration-300">{act.timestamp}</span>
+        </div>
+        {act.item && (
+           <p className="text-[11px] font-black text-primary mt-0.5 group-hover:tracking-wide duration-300">
+             {act.item}
+           </p>
+        )}
+        {act.location && (
+          <div className="flex items-center gap-1 mt-1 opacity-60 group-hover:opacity-100 duration-300">
+            <span className="material-symbols-outlined text-[12px] text-slate-400">location_on</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{act.location}</span>
+          </div>
+        )}
+      </div>
+    </m.div>
+  );
+});
+
+ActivityItem.displayName = "ActivityItem";
+
 export const ActivityFeed: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,13 +63,29 @@ export const ActivityFeed: React.FC = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
+        if (!supabase) {
+          console.warn("Supabase client not initialized in ActivityFeed");
+          setLoading(false);
+          return;
+        }
+
         const { data: items, error: itemsError } = await supabase
           .from('found_items')
           .select('id, title, city, created_at')
           .order('created_at', { ascending: false })
           .limit(5);
 
-        if (itemsError) throw itemsError;
+        if (itemsError) {
+          console.error("Supabase Error in ActivityFeed:", itemsError.message, itemsError.details);
+          setLoading(false);
+          return;
+        }
+
+        if (!items) {
+          setActivities([]);
+          setLoading(false);
+          return;
+        }
 
         const mappedItems: Activity[] = items.map(item => ({
           id: item.id,
@@ -38,8 +97,12 @@ export const ActivityFeed: React.FC = () => {
         }));
 
         setActivities(mappedItems);
-      } catch (err) {
-        console.error("Error fetching activities:", err);
+      } catch (err: any) {
+        console.error("Unexpected Error fetching activities:", {
+          message: err.message,
+          stack: err.stack,
+          raw: err
+        });
       } finally {
         setLoading(false);
       }
@@ -47,7 +110,6 @@ export const ActivityFeed: React.FC = () => {
 
     fetchActivities();
 
-    // Subscribe to new items
     const subscription = supabase
       .channel('public:found_items')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'found_items' }, (payload) => {
@@ -84,48 +146,15 @@ export const ActivityFeed: React.FC = () => {
             <span className="material-symbols-outlined animate-spin text-primary">sync</span>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            {activities.length > 0 ? activities.map((act) => (
-              <motion.div
-                key={act.id}
-                initial={{ opacity: 0, x: -20, height: 0 }}
-                animate={{ opacity: 1, x: 0, height: 'auto' }}
-                exit={{ opacity: 0, scale: 0.9, x: 20 }}
-                transition={{ duration: 0.4, type: "spring", stiffness: 100 }}
-                className="group relative flex items-start gap-3 p-3 rounded-2xl border border-transparent hover:border-slate-100 dark:hover:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all cursor-default"
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner border border-white/20 transition-transform group-hover:scale-110 duration-300`}>
-                  <span className="material-symbols-outlined text-[20px]">
-                    {act.type === 'found' ? 'package_2' : act.type === 'joined' ? 'person_add' : 'payments'}
-                  </span>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      {act.user} <span className="font-medium text-slate-500 dark:text-slate-400">
-                        {act.type === 'found' ? 'registrou um novo achado' : act.type === 'joined' ? 'entrou na plataforma' : 'recebeu uma recompensa'}
-                      </span>
-                    </p>
-                    <span className="text-[9px] font-medium text-slate-400 shrink-0 transform-gpu group-hover:-translate-x-1 duration-300">{act.timestamp}</span>
-                  </div>
-                  {act.item && (
-                     <p className="text-[11px] font-black text-primary mt-0.5 group-hover:tracking-wide duration-300">
-                       {act.item}
-                     </p>
-                  )}
-                  {act.location && (
-                    <div className="flex items-center gap-1 mt-1 opacity-60 group-hover:opacity-100 duration-300">
-                      <span className="material-symbols-outlined text-[12px] text-slate-400">location_on</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{act.location}</span>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )) : (
-              <div className="p-8 text-center text-xs text-slate-500">Sem atividades recentes.</div>
-            )}
-          </AnimatePresence>
+          <div className="flex flex-col gap-4">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {activities.length > 0 ? (
+                activities.map((act) => <ActivityItem key={act.id} act={act} />)
+              ) : (
+                <div className="p-8 text-center text-xs text-slate-500">Sem atividades recentes.</div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
       </div>
 
@@ -133,3 +162,4 @@ export const ActivityFeed: React.FC = () => {
     </div>
   );
 };
+

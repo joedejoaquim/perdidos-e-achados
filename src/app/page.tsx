@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -15,7 +15,7 @@ export default function LandingPage() {
   return (
     <div className="space-y-16">
       {/* Hero */}
-      <motion.section
+      <m.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="py-16 text-center"
@@ -25,7 +25,7 @@ export default function LandingPage() {
           Encontrou algo perdido?
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          Conecte-se com quem perdeu. Ajude de forma simples e receba recompansas.
+          Conecte-se com quem perdeu. Ajude de forma simples e receba recompensas.
         </p>
 
         <div className="flex gap-4 justify-center">
@@ -42,10 +42,10 @@ export default function LandingPage() {
             Buscar Item
           </Link>
         </div>
-      </motion.section>
+      </m.section>
 
       {/* How it works */}
-      <motion.section
+      <m.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -80,7 +80,7 @@ export default function LandingPage() {
               icon: "💰",
             },
           ].map((step, i) => (
-            <motion.div
+            <m.div
               key={step.number}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -92,13 +92,13 @@ export default function LandingPage() {
               </div>
               <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
               <p className="text-muted-foreground">{step.description}</p>
-            </motion.div>
+            </m.div>
           ))}
         </div>
-      </motion.section>
+      </m.section>
 
       {/* Benefits */}
-      <motion.section
+      <m.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -114,7 +114,7 @@ export default function LandingPage() {
               icon: "🔒",
             },
             {
-              title: "Ganhe Recompenas",
+              title: "Ganhe Recompensas",
               description: "Receba até 80% da taxa de resgate",
               icon: "🏆",
             },
@@ -129,7 +129,7 @@ export default function LandingPage() {
               icon: "❤️",
             },
           ].map((benefit, i) => (
-            <motion.div
+            <m.div
               key={benefit.title}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -143,13 +143,13 @@ export default function LandingPage() {
                   {benefit.description}
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
-      </motion.section>
+      </m.section>
 
       {/* Testimonials */}
-      <motion.section
+      <m.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
@@ -178,7 +178,7 @@ export default function LandingPage() {
               rating: 5,
             },
           ].map((testimonial) => (
-            <motion.div
+            <m.div
               key={testimonial.name}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -191,13 +191,13 @@ export default function LandingPage() {
               <p className="mb-4 text-foreground">"{testimonial.text}"</p>
               <p className="font-semibold">{testimonial.name}</p>
               <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-            </motion.div>
+            </m.div>
           ))}
         </div>
-      </motion.section>
+      </m.section>
 
       {/* CTA */}
-      <motion.section
+      <m.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
@@ -213,7 +213,7 @@ export default function LandingPage() {
         >
           Criar Conta Grátis
         </Link>
-      </motion.section>
+      </m.section>
     </div>
   );
 }

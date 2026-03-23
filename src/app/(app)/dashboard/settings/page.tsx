@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
@@ -58,7 +58,7 @@ export default function SettingsPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Settings Sidebar */}
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="w-full md:w-64 shrink-0"
@@ -81,10 +81,10 @@ export default function SettingsPage() {
                  </button>
                ))}
             </nav>
-          </motion.div>
+          </m.div>
 
           {/* Settings Content Area */}
-          <motion.div 
+          <m.div 
             variants={containerVariants}
             initial="hidden"
             animate="show"
@@ -92,9 +92,9 @@ export default function SettingsPage() {
           >
             {activeTab === 'perfil' && (
               <div className="max-w-xl">
-                 <motion.h2 variants={itemVariants} className="text-xl font-bold text-slate-900 dark:text-white mb-6">Informações Pessoais</motion.h2>
+                 <m.h2 variants={itemVariants} className="text-xl font-bold text-slate-900 dark:text-white mb-6">Informações Pessoais</m.h2>
                  
-                 <motion.div variants={itemVariants} className="flex items-center gap-6 mb-8">
+                 <m.div variants={itemVariants} className="flex items-center gap-6 mb-8">
                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-orange-400 text-white flex items-center justify-center text-3xl font-bold shadow-lg shadow-primary/20 shrink-0">
                      {user?.name?.charAt(0).toUpperCase() || "A"}
                    </div>
@@ -102,9 +102,9 @@ export default function SettingsPage() {
                      <button className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white rounded-lg text-sm font-bold shadow-sm hover:shadow transition-all border border-slate-200 dark:border-slate-700">Alterar Foto</button>
                      <p className="text-xs text-slate-500 mt-2">Formatos: JPG, PNG até 5MB</p>
                    </div>
-                 </motion.div>
+                 </m.div>
 
-                  <motion.form variants={itemVariants} onSubmit={handleSave} className="space-y-5">
+                  <m.form variants={itemVariants} onSubmit={handleSave} className="space-y-5">
                     <div className="grid md:grid-cols-2 gap-5">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Nome Completo</label>
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                         {loading ? 'Salvando...' : 'Salvar Alterações'}
                       </button>
                     </div>
-                  </motion.form>
+                  </m.form>
               </div>
             )}
 
@@ -154,9 +154,10 @@ export default function SettingsPage() {
               </div>
             )}
 
-          </motion.div>
+          </m.div>
         </div>
       </main>
     </div>
   );
 }
+
