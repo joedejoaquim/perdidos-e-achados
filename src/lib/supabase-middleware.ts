@@ -11,10 +11,7 @@ function matchesRoute(pathname: string, routes: string[]) {
 }
 
 function getSafeRedirectPath(next: string | null) {
-  if (!next || !next.startsWith("/")) {
-    return "/dashboard";
-  }
-
+  if (!next || !next.startsWith("/")) return "/dashboard/owner";
   return next;
 }
 
@@ -23,7 +20,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -31,44 +32,33 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        );
         response = NextResponse.next({ request });
-
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        );
       },
     },
   });
 
-  // Use getSession() instead of getUser() for performance
-  // getSession() reads from the local JWT cookie (instant)
-  // getUser() makes a network call to Supabase (200-500ms)
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user ?? null;
+  // getUser() is more robust than getSession() in edge runtime middleware
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname, search } = request.nextUrl;
   const isProtectedRoute = matchesRoute(pathname, protectedRoutes);
   const isAuthRoute = matchesRoute(pathname, authRoutes);
 
   if (isProtectedRoute && !user) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/auth/login";
+    const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isAuthRoute && user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = getSafeRedirectPath(request.nextUrl.searchParams.get("next"));
-    redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+    const nextPath = getSafeRedirectPath(request.nextUrl.searchParams.get("next"));
+    return NextResponse.redirect(new URL(nextPath, request.url));
   }
 
   return response;
