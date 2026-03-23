@@ -58,8 +58,6 @@ async function resolveAuthSnapshot(): Promise<AuthSnapshot> {
 
   pendingAuthSnapshot = (async () => {
     try {
-      // Use getSession() instead of getUser() for speed
-      // getSession() reads from the local JWT (instant), getUser() calls the network
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -89,7 +87,7 @@ async function resolveAuthSnapshot(): Promise<AuthSnapshot> {
         return {
           user: buildFallbackUser(authUser),
           error:
-            syncPayload?.error || "Os dados do banco ainda nao foram configurados.",
+            syncPayload?.error || "Perfil banco ainda nao configurado.",
         };
       }
 
@@ -100,7 +98,7 @@ async function resolveAuthSnapshot(): Promise<AuthSnapshot> {
     } catch (error) {
       return {
         user: null,
-        error: error instanceof Error ? error.message : "Erro ao carregar sessao",
+        error: error instanceof Error ? error.message : "Erro auth",
       };
     }
   })();
@@ -144,30 +142,21 @@ export const useAuth = ({ enabled = true }: UseAuthOptions = {}) => {
     let isMounted = true;
 
     const syncState = async (forceRefresh = false) => {
-      if (forceRefresh) {
-        resetAuthSnapshot();
-      }
+      if (forceRefresh) resetAuthSnapshot();
+      
+      const snapshot = await resolveAuthSnapshot();
 
-      if (!authContext?.ready && !authSnapshotReady) {
-        setLoading(true);
-      }
-
-      const snapshot =
-        authContext?.ready && !forceRefresh
-          ? { user: authContext.user, error: authContext.error }
-          : authSnapshotReady && !forceRefresh
-            ? authSnapshot
-            : await resolveAuthSnapshot();
-
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
       setUser(snapshot.user);
       setError(snapshot.error);
       setLoading(false);
-      authContext?.setUser(snapshot.user);
-      authContext?.setError(snapshot.error);
+      
+      // Update context only if it's different to prevent loops
+      if (authContext && authContext.user?.id !== snapshot.user?.id) {
+         authContext.setUser(snapshot.user);
+         authContext.setError(snapshot.error);
+      }
     };
 
     if (authContext?.ready) {
@@ -181,25 +170,15 @@ export const useAuth = ({ enabled = true }: UseAuthOptions = {}) => {
     const { data } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "SIGNED_OUT") {
         resetAuthSnapshot({ user: null, error: null });
-        authContext?.setUser(null);
-        authContext?.setError(null);
-
         if (isMounted) {
           setUser(null);
-          setError(null);
           setLoading(false);
+          router.push("/auth/login");
         }
-
-        router.replace("/auth/login");
-        router.refresh();
         return;
       }
 
-      if (
-        event === "SIGNED_IN" ||
-        event === "TOKEN_REFRESHED" ||
-        event === "USER_UPDATED"
-      ) {
+      if (event === "SIGNED_IN") {
         await syncState(true);
         router.refresh();
       }
@@ -209,35 +188,22 @@ export const useAuth = ({ enabled = true }: UseAuthOptions = {}) => {
       isMounted = false;
       data?.subscription.unsubscribe();
     };
-  }, [authContext, enabled, router]);
+  }, [enabled, router]); // Context removed from deps to prevent re-trigger loop
 
   return { user, loading, error };
 };
 
 export const useLogout = () => {
-  const authContext = useOptionalAuthContext();
-
   const logout = async () => {
     try {
-      // First, attempt server-side logout to clear cookies
       await fetch("/api/auth/logout", { method: "POST" });
-    } catch (e) {
-      console.error("Server-side logout error:", e);
-    }
+    } catch (e) {}
 
     try {
-      // Also do client-side logout
       await supabase.auth.signOut();
-    } catch (e) {
-      console.error("Client-side logout error:", e);
-    }
+    } catch (e) {}
 
-    // Reset local state
     resetAuthSnapshot({ user: null, error: null });
-    authContext?.setUser(null);
-    authContext?.setError(null);
-
-    // Hard redirect to login to clear all memory
     window.location.href = "/auth/login";
   };
 
