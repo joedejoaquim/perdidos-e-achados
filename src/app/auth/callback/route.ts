@@ -8,6 +8,7 @@ export async function GET(request: Request) {
   // Se redirecionamento for nulo, volta para a rota padrão do dashboard
   const next = searchParams.get("next") || "/dashboard/owner";
 
+<<<<<<< HEAD
   if (!code) {
     console.error("DEBUG: Missing OAuth code in callback");
     return NextResponse.redirect(new URL("/auth/login?error=missing_code", origin));
@@ -47,4 +48,18 @@ export async function GET(request: Request) {
 
   // No localhost, usamos o origin detectado da requisição
   return NextResponse.redirect(new URL(next, origin));
+=======
+  if (code) {
+    const supabase = createRouteHandlerClient({ cookies });
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      console.error("Erro ao trocar code por sessão:", error);
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+  }
+
+  return NextResponse.redirect(new URL("/dashboard", request.url));
+>>>>>>> origin/main
 }

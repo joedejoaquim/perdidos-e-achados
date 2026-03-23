@@ -188,7 +188,7 @@ export default function LandingPage() {
               <div className="mb-4">
                 {"⭐".repeat(testimonial.rating)}
               </div>
-              <p className="mb-4 text-foreground">"{testimonial.text}"</p>
+              <p className="mb-4 text-foreground">&ldquo;{testimonial.text}&rdquo;</p>
               <p className="font-semibold">{testimonial.name}</p>
               <p className="text-sm text-muted-foreground">{testimonial.role}</p>
             </m.div>

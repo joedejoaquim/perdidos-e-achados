@@ -203,7 +203,7 @@ export const storage = {
     try {
       return JSON.parse(item);
     } catch {
-      return item as any;
+      return item as unknown as T;
     }
   },
   set: <T,>(key: string, value: T): void => {

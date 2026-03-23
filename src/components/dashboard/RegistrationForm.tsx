@@ -318,6 +318,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       key={photo.id}
                       className="group relative h-20 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800"
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={photo.url}
                         alt={`Preview ${index + 1}`}

@@ -25,6 +25,7 @@ export default function ProfileCard({
           className="size-32 rounded-full overflow-hidden border-4 border-primary/10 bg-slate-200 dark:bg-slate-700"
           data-alt="Large user profile picture"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt={name}
             className="w-full h-full object-cover"

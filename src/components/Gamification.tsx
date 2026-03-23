@@ -75,8 +75,16 @@ export const XPProgressBar: React.FC<XPProgressBarProps> = ({ xp, level }) => {
   );
 };
 
+interface BadgeItem {
+  id: string;
+  badges?: {
+    icon?: string;
+    name?: string;
+  };
+}
+
 interface BadgeGridProps {
-  badges: any[];
+  badges: BadgeItem[];
   layout?: "grid" | "row";
 }
 
@@ -161,6 +169,7 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({ users, limit = 10 })
               #{index + 1}
             </div>
             {user.avatar_url && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={user.avatar_url}
                 alt={user.name}

@@ -15,7 +15,7 @@ export interface User {
   rating: number;
   rank_position: number;
   kyc_status: KYCStatus;
-  kyc_data?: any;
+  kyc_data?: KYCData;
   verified: boolean;
   created_at: Date;
   updated_at: Date;

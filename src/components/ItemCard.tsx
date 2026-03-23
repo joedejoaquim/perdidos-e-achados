@@ -35,6 +35,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       {/* Image */}
       <div className="relative w-full h-48 bg-muted overflow-hidden">
         {item.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={item.photo_url}
             alt={item.title}

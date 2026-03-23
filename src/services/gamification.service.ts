@@ -13,7 +13,7 @@ export class GamificationService {
   };
 
   static async addXpReward(userId: string, type: string): Promise<number> {
-    const xpAmount = (this.XP_VALUES as any)[type] || 0;
+    const xpAmount = (this.XP_VALUES as Record<string, number>)[type] || 0;
 
     if (xpAmount > 0) {
       await UserService.addXp(userId, xpAmount);
@@ -134,7 +134,7 @@ export class GamificationService {
     const newLevel = calculateLevel(user.xp);
 
     if (newLevel !== user.level) {
-      await UserService.updateUser(userId, { level: newLevel as any });
+      await UserService.updateUser(userId, { level: newLevel as import("@/types").UserLevel });
 
       // Log activity
       await supabase.from("activities").insert([
@@ -163,7 +163,7 @@ export class GamificationService {
     return data || [];
   }
 
-  static async getRanking(limit: number = 10): Promise<any[]> {
+  static async getRanking(limit: number = 10): Promise<Record<string, unknown>[]> {
     const { data, error } = await supabase
       .from("users")
       .select("id, name, avatar_url, xp, level, rank_position")

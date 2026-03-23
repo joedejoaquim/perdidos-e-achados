@@ -82,6 +82,7 @@ export default function RegisterPage() {
         }),
       });
 
+<<<<<<< HEAD
       const loginPayload = await loginResponse.json();
 
       if (!loginResponse.ok) {
@@ -91,6 +92,11 @@ export default function RegisterPage() {
       window.location.assign("/dashboard");
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta");
+=======
+      router.push("/auth/login?registered=true");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Erro ao criar conta");
+>>>>>>> origin/main
     } finally {
       setLoading(false);
     }
@@ -184,6 +190,7 @@ export default function RegisterPage() {
             transition={{ duration: 2 }}
             className="absolute right-0 bottom-0 w-[120%] h-full pointer-events-none select-none"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/login_hero_3d.png"
               alt="Decorative 3D Art"
