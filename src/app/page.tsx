@@ -20,7 +20,6 @@ export default function LandingPage() {
         animate={{ opacity: 1, y: 0 }}
         className="py-16 text-center"
       >
-        <div className="text-6xl mb-6">🎯</div>
         <h1 className="text-5xl font-bold mb-4">
           Encontrou algo perdido?
         </h1>

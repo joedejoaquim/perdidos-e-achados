@@ -1,0 +1,10 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="256" height="256" rx="64" fill="url(#grad)" />
+  <text x="50%" y="55%" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="140" fill="white" text-anchor="middle" dominant-baseline="middle">A</text>
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f172a" /> <!-- Primary approx -->
+      <stop offset="1" stop-color="#f97316" /> <!-- Orange-500 -->
+    </linearGradient>
+  </defs>
+</svg>

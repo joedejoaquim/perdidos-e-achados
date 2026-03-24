@@ -34,9 +34,16 @@ export const Navbar = memo(({ initialUser = null }: NavbarProps) => {
     >
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="font-bold text-lg group-hover:text-primary transition-colors duration-200">🎯 ACHADOS</div>
-        </Link>
+        <div className="relative z-10">
+          <Link className="flex items-center gap-3 group" href="/">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+              <span className="text-white text-xl font-bold">A</span>
+            </div>
+            <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+              ACHADOS
+            </span>
+          </Link>
+        </div>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">

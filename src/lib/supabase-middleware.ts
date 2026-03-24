@@ -43,12 +43,16 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // getUser() is more robust than getSession() in edge runtime middleware
-  const { data: { user } } = await supabase.auth.getUser();
-
   const { pathname, search } = request.nextUrl;
   const isProtectedRoute = matchesRoute(pathname, protectedRoutes);
   const isAuthRoute = matchesRoute(pathname, authRoutes);
+
+  // Optimização Crítica de Navegação:
+  // getSession() apenas valida o JWT localmente (instantâneo ~1ms). 
+  // getUser() faz uma request externa ao Supabase (~200-500ms) a cada navegação de tela!
+  // Como o middleware server apenas para roteamento visual, getSession() é a escolha ideal de performance.
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
 
   if (isProtectedRoute && !user) {
     const loginUrl = new URL("/auth/login", request.url);

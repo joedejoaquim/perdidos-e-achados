@@ -10,7 +10,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="font-bold text-lg mb-4">🎯 ACHADOS</h3>
+            <h3 className="font-bold text-lg mb-4">ACHADOS</h3>
             <p className="text-sm text-muted-foreground">
               Conectando pessoas aos seus objetos perdidos de forma rápida e simples.
             </p>
