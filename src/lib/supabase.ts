@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createBrowserClient } from "@supabase/ssr";
 
-<<<<<<< HEAD
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -32,34 +31,12 @@ export const supabase =
 
 // Aliases for compatibility with other files
 export const supabaseBrowser = supabase;
-=======
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Valida apenas em runtime real (não durante o build do Next.js)
-const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
-
-if (!isBuildPhase && (!supabaseUrl || !supabaseAnonKey)) {
-  throw new Error(
-    "Supabase env vars não configuradas: NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY são obrigatórias."
-  );
-}
-
-export const supabase = createClient(
-  supabaseUrl ?? "https://placeholder.supabase.co",
-  supabaseAnonKey ?? "placeholder-key"
-);
->>>>>>> origin/main
 
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const supabaseAdmin =
   typeof window === "undefined" && supabaseServiceRoleKey
-<<<<<<< HEAD
     ? createClient(supabaseUrl, supabaseServiceRoleKey, {
-=======
-    ? createClient(supabaseUrl!, supabaseServiceRoleKey, {
->>>>>>> origin/main
         auth: {
           persistSession: false,
           autoRefreshToken: false,

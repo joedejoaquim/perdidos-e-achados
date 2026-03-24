@@ -143,17 +143,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           />
         </div>
 
-<<<<<<< HEAD
         <p className="flex items-center gap-1 text-xs italic text-slate-500 dark:text-slate-400">
           <ShieldCheck className="h-3.5 w-3.5" />
           {nextLevel
             ? `Faltam ${xpToNextLevel} XP para o selo ${levelLabels[nextLevel]}`
             : "Voce ja atingiu o nivel maximo"}
-=======
-        <p className="text-xs text-slate-500 dark:text-slate-400 italic flex items-center gap-1">
-          <span>ℹ️</span>
-          Faltam {xpToNextLevel} XP para o selo &ldquo;Guardião Lendário&rdquo;
->>>>>>> origin/main
         </p>
       </div>
 

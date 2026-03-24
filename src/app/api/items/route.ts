@@ -101,7 +101,6 @@ export async function POST(req: NextRequest) {
       .select("*")
       .single();
 
-<<<<<<< HEAD
     if (error || !item) {
       throw error ?? new Error("Falha ao criar item");
     }
@@ -114,13 +113,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: item }, { status: 201 });
   } catch (error: any) {
-=======
-    return NextResponse.json(
-      { success: true, data: item },
-      { status: 201 }
-    );
-  } catch (error: unknown) {
->>>>>>> origin/main
     console.error("Error creating item:", error);
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }

@@ -137,17 +137,12 @@ export default function FinderDashboard() {
   ];
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen flex flex-col bg-background-light text-slate-900 transition-colors duration-300 dark:bg-background-dark dark:text-slate-100">
       <Header
         user={authUser}
         hasNotification={activeRecoveriesCount > 0}
         onSearchChange={setSearchQuery}
       />
-=======
-    <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors duration-300 flex flex-col">
-      <Header user={user ?? authUser} />
->>>>>>> origin/main
 
       <main className="flex flex-1 flex-col max-w-[1440px] mx-auto w-full mb-20">
 

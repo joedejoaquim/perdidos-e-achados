@@ -47,7 +47,6 @@ export const Navbar = memo(({ initialUser = null }: NavbarProps) => {
               <Link href="/profile" className="text-sm font-medium hover:text-primary transition">Perfil</Link>
               <div className="flex items-center gap-3 border-l border-border/40 pl-6 ml-2">
                 {user.avatar_url && (
-<<<<<<< HEAD
                   <div className="relative w-8 h-8 flex-shrink-0">
                     <Image
                       src={user.avatar_url}
@@ -57,14 +56,6 @@ export const Navbar = memo(({ initialUser = null }: NavbarProps) => {
                       sizes="32px"
                     />
                   </div>
-=======
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={user.avatar_url}
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-full"
-                  />
->>>>>>> origin/main
                 )}
                 <span className="text-sm font-semibold">{user.name}</span>
                 <button
