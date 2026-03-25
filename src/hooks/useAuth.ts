@@ -14,7 +14,7 @@ let authSnapshot: AuthSnapshot = { user: null, error: null };
 let authSnapshotReady = false;
 let pendingAuthSnapshot: Promise<AuthSnapshot> | null = null;
 
-function buildFallbackUser(authUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; email_confirmed_at?: string }): User {
+function buildFallbackUser(authUser: { id: string; email?: string; user_metadata?: any; email_confirmed_at?: string }): User { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     id: authUser.id,
     email: authUser.email || "",

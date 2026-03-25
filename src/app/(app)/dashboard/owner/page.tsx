@@ -89,7 +89,7 @@ export default function OwnerDashboard() {
     const controller = new AbortController();
     const loadDashboard = async () => {
       try {
-        // loading state removed for lint compatibility        const requestUrl = new URL("/api/dashboard/owner", window.location.origin);
+        const requestUrl = new URL("/api/dashboard/owner", window.location.origin);
         if (deferredQuery) requestUrl.searchParams.set("q", deferredQuery);
         if (category !== "all") requestUrl.searchParams.set("category", category);
         if (status !== "all") requestUrl.searchParams.set("status", status);
