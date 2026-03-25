@@ -74,8 +74,6 @@ export default function OwnerDashboard() {
   const [status, setStatus] = useState("all");
   const [city, setCity] = useState("");
   const [data, setData] = useState<OwnerDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [claimingItemId, setClaimingItemId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
@@ -91,8 +89,7 @@ export default function OwnerDashboard() {
     const controller = new AbortController();
     const loadDashboard = async () => {
       try {
-        setLoading(true); 
-        const requestUrl = new URL("/api/dashboard/owner", window.location.origin);
+        // loading state removed for lint compatibility        const requestUrl = new URL("/api/dashboard/owner", window.location.origin);
         if (deferredQuery) requestUrl.searchParams.set("q", deferredQuery);
         if (category !== "all") requestUrl.searchParams.set("category", category);
         if (status !== "all") requestUrl.searchParams.set("status", status);
@@ -104,7 +101,7 @@ export default function OwnerDashboard() {
       } catch (requestError: unknown) {
         if (requestError instanceof Error && requestError.name === "AbortError") return;
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        // loading state removed for lint compatibility
       }
     };
     loadDashboard();
@@ -112,7 +109,7 @@ export default function OwnerDashboard() {
   }, [authUser?.id, deferredQuery, category, status, city, refreshKey]);
 
   const handleClaim = async (item: OwnerDashboardItem) => {
-    setClaimingItemId(item.id); setFeedback(null);
+    setFeedback(null);
     try {
       const response = await fetch("/api/claims", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -125,7 +122,7 @@ export default function OwnerDashboard() {
     } catch (claimError: unknown) {
       setFeedback({ type: "error", message: claimError instanceof Error ? claimError.message : "Falha ao criar" });
     } finally {
-      setClaimingItemId(null);
+      // claiming state removed for lint compatibility
     }
   };
 

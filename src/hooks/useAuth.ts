@@ -14,7 +14,7 @@ let authSnapshot: AuthSnapshot = { user: null, error: null };
 let authSnapshotReady = false;
 let pendingAuthSnapshot: Promise<AuthSnapshot> | null = null;
 
-function buildFallbackUser(authUser: { id: string; email?: string; user_metadata?: Record<string, any>; email_confirmed_at?: string }): User {
+function buildFallbackUser(authUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; email_confirmed_at?: string }): User {
   return {
     id: authUser.id,
     email: authUser.email || "",
@@ -92,8 +92,8 @@ export const useAuth = ({ enabled = true }: UseAuthOptions = {}) => {
 
 export const useLogout = () => {
   return async () => {
-    try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
-    try { await supabase.auth.signOut(); } catch (e) {}
+    try { await fetch("/api/auth/logout", { method: "POST" }); } catch { /* ignore */ }
+    try { await supabase.auth.signOut(); } catch { /* ignore */ }
     resetAuthSnapshot({ user: null, error: null });
     window.location.href = "/auth/login";
   };
