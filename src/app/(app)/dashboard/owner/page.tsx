@@ -44,7 +44,8 @@ const STATUS_OPTIONS = [
   { value: "delivered", label: "Entregue" },
 ];
 
-const CLAIM_STEP_ORDER = ["pending", "accepted", "in_delivery", "completed"] as const;
+/* Removido constante não utilizada */
+
 
 function getClaimLabel(status: OwnerClaimStatus) {
   const labels: Record<OwnerClaimStatus, string> = { pending: "Solicitação enviada", accepted: "Aguardando entrega", in_delivery: "Em entrega", completed: "Concluído", disputed: "Em análise", cancelled: "Cancelado" };
@@ -56,27 +57,14 @@ function getPaymentLabel(status: OwnerPaymentStatus) {
   return labels[status] || "Pendente";
 }
 
-function getClaimStepIndex(status: OwnerClaimStatus) {
-  const index = CLAIM_STEP_ORDER.indexOf(status as (typeof CLAIM_STEP_ORDER)[number]);
-  return index >= 0 ? index : 0;
-}
+/* Removido código não utilizado que causava aviso de build */
 
-function getLocationLabel(item: { city: string; state: string }) {
-  return [item.city, item.state].filter(Boolean).join(", ") || "Local não informado";
-}
 
-function ResultCardSkeleton() {
-  return (
-    <div className="animate-pulse overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="h-48 bg-slate-100 dark:bg-slate-800 w-full" />
-      <div className="space-y-4 p-4">
-        <div className="h-4 w-3/4 rounded bg-slate-100 dark:bg-slate-800" />
-        <div className="h-3 w-full rounded bg-slate-100 dark:bg-slate-800" />
-        <div className="h-10 rounded-xl bg-slate-100 dark:bg-slate-800 w-full mt-2" />
-      </div>
-    </div>
-  );
-}
+/* Removido código não utilizado que causava aviso de build */
+
+
+/* Removido código não utilizado que causava aviso de build */
+
 
 export default function OwnerDashboard() {
   const { user: authUser, loading: authLoading } = useAuth();
@@ -86,9 +74,10 @@ export default function OwnerDashboard() {
   const [status, setStatus] = useState("all");
   const [city, setCity] = useState("");
   const [data, setData] = useState<OwnerDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [claimingItemId, setClaimingItemId] = useState<string | null>(null);
+  const [_loading, setLoading] = useState(true);
+  const [_claimingItemId, setClaimingItemId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -112,8 +101,8 @@ export default function OwnerDashboard() {
         const payload = await response.json().catch(() => null);
         if (!response.ok || !payload?.data) throw new Error(payload?.error || "Erro ao carregar dashboard");
         setData(payload.data);
-      } catch (requestError: any) {
-        if (requestError.name === "AbortError") return;
+      } catch (requestError: unknown) {
+        if (requestError instanceof Error && requestError.name === "AbortError") return;
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -133,8 +122,8 @@ export default function OwnerDashboard() {
       if (!response.ok) throw new Error(payload?.error || "Não foi possível criar a solicitação");
       setFeedback({ type: "success", message: payload?.warning || "Solicitação criada com sucesso." });
       setRefreshKey((c) => c + 1);
-    } catch (claimError: any) {
-      setFeedback({ type: "error", message: claimError.message || "Falha ao criar" });
+    } catch (claimError: unknown) {
+      setFeedback({ type: "error", message: claimError instanceof Error ? claimError.message : "Falha ao criar" });
     } finally {
       setClaimingItemId(null);
     }

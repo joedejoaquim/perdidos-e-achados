@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, memo } from "react";
+import React, { useEffect, useState, memo } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
@@ -97,10 +97,10 @@ export const ActivityFeed: React.FC = () => {
         }));
 
         setActivities(mappedItems);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Unexpected Error fetching activities:", {
-          message: err.message,
-          stack: err.stack,
+          message: err instanceof Error ? err.message : "Unknown error",
+          stack: err instanceof Error ? err.stack : undefined,
           raw: err
         });
       } finally {

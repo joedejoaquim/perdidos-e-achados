@@ -19,7 +19,7 @@ export default function UserProfilePage() {
   const [activeRole, setActiveRole] = useState<'finder' | 'owner'>('finder');
   
   const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [stats, setStats] = useState<any>({
+  const [stats, setStats] = useState({
     reputation: 5.0,
     reputationCount: 0,
     rewardsAmount: "R$ 0,00",
@@ -43,7 +43,15 @@ export default function UserProfilePage() {
           .limit(10);
 
         if (mounted && acts) {
-          const formattedActs: ActivityItem[] = acts.map((act: any) => {
+          interface ActivityResult {
+            id: string;
+            type: string;
+            description: string;
+            value: string | number;
+            created_at: string;
+          }
+
+          const formattedActs: ActivityItem[] = (acts as unknown as ActivityResult[] || []).map((act) => {
             let icon = 'history';
             if (act.type === 'reward_received' || act.type === 'payment') icon = 'payments';
             if (act.type === 'item_registered' || act.type === 'item') icon = 'package_2';

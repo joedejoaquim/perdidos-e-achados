@@ -35,9 +35,9 @@ export async function POST(request: Request) {
     await ensureUserProfile(user);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || "Erro interno ao fazer login." },
+      { error: error instanceof Error ? error.message : "Erro interno ao fazer login." },
       { status: 500 }
     );
   }

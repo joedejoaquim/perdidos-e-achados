@@ -310,7 +310,7 @@ export default function RegisterPage() {
                           type="password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                          placeholder="********"
                           className="w-full pl-12 pr-4 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder:text-white/10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-light"
                           required
                         />
@@ -329,7 +329,7 @@ export default function RegisterPage() {
                           type="password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                          placeholder="********"
                           className="w-full pl-12 pr-4 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder:text-white/10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-light"
                           required
                         />

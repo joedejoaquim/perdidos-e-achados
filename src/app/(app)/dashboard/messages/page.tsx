@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { m } from 'framer-motion';
@@ -42,7 +42,14 @@ export default function MessagesPage() {
 
         if (error) throw error;
 
-        const mappedChats: Chat[] = claims.map((c: any) => ({
+        interface ClaimResult {
+          id: string;
+          status: string;
+          created_at: string;
+          found_items: { title: string } | null;
+        }
+
+        const mappedChats: Chat[] = (claims as unknown as ClaimResult[] || []).map((c) => ({
           id: c.id,
           name: c.found_items?.title || 'Chamado de Devolução',
           lastMessage: `Status: ${c.status}`,

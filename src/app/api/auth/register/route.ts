@@ -53,11 +53,13 @@ export async function POST(request: Request) {
         name: String(name).trim(),
         phone: String(phone || "").trim(),
       });
-    } catch (profileError: any) {
+    } catch (profileError: unknown) {
       // Se o erro for de duplicata (o Trigger já criou), ignoramos
       if (
-        profileError?.message?.includes("duplicate key") ||
-        profileError?.message?.includes("unique constraint")
+        profileError instanceof Error && (
+          profileError.message.includes("duplicate key") ||
+          profileError.message.includes("unique constraint")
+        )
       ) {
         console.warn("Profile already created by trigger, skipping.");
       } else {
@@ -67,9 +69,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || "Erro interno ao criar conta." },
+      { error: error instanceof Error ? error.message : "Erro interno ao criar conta." },
       { status: 500 }
     );
   }

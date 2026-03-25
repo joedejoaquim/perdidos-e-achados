@@ -14,7 +14,7 @@ let authSnapshot: AuthSnapshot = { user: null, error: null };
 let authSnapshotReady = false;
 let pendingAuthSnapshot: Promise<AuthSnapshot> | null = null;
 
-function buildFallbackUser(authUser: any): User {
+function buildFallbackUser(authUser: { id: string; email?: string; user_metadata?: any; email_confirmed_at?: string }): User {
   return {
     id: authUser.id,
     email: authUser.email || "",
@@ -40,8 +40,8 @@ async function resolveAuthSnapshot(): Promise<AuthSnapshot> {
       const syncPayload = await syncResponse.json().catch(() => null);
       if (!syncResponse.ok || !syncPayload?.data) return { user: buildFallbackUser(authUser), error: syncPayload?.error || "Perfil não configurado." };
       return { user: syncPayload.data, error: null };
-    } catch (e: any) {
-      return { user: null, error: e.message || "Erro auth" };
+    } catch (e: unknown) {
+      return { user: null, error: e instanceof Error ? e.message : "Erro auth" };
     }
   })();
   const snapshot = await pendingAuthSnapshot;

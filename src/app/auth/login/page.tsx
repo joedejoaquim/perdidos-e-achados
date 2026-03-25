@@ -84,8 +84,8 @@ export default function LoginPage() {
 
       router.push(nextPath);
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Erro ao fazer login");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao fazer login");
     } finally {
       setLoading(false);
     }
@@ -115,8 +115,8 @@ export default function LoginPage() {
         },
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err.message || "Erro ao fazer login com Google");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao fazer login com Google");
     }
   };
 
@@ -232,7 +232,7 @@ export default function LoginPage() {
                   className="mb-8 p-5 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-start gap-4 overflow-hidden"
                 >
                   <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
-                    <span className="text-xl">ðŸ› ï¸</span>
+                    <span className="text-xl">⚙️</span>
                   </div>
                   <div>
                     <h4 className="font-bold text-orange-400 mb-1 leading-tight">Configuração Supabase</h4>
@@ -292,7 +292,7 @@ export default function LoginPage() {
                 <div className="relative group/input">
                   <input
                     type="password"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="********"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-white/[0.03] border border-white/[0.1] text-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all duration-300 placeholder:text-gray-700 group-hover/input:border-white/[0.2]"

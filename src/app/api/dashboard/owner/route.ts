@@ -42,6 +42,7 @@ function normalizeFilter(value: string | null) {
   return value?.trim() ?? "";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applyItemFilters(query: any, filters: ItemFilters) {
   const normalizedQuery = filters.q.replace(/[,%]/g, " ").trim();
 

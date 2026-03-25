@@ -17,9 +17,9 @@ export async function POST() {
     const profile = await ensureUserProfile(user);
 
     return NextResponse.json({ success: true, data: profile });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || "Erro ao sincronizar perfil." },
+      { error: error instanceof Error ? error.message : "Erro ao sincronizar perfil." },
       { status: 500 }
     );
   }
