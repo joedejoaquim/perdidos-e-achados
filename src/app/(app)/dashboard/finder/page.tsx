@@ -261,7 +261,7 @@ export default function FinderDashboard() {
               {deferredSearchQuery && (
                 <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary dark:border-primary/30 dark:bg-primary/15">
                   Exibindo {filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""}{" "}
-                  para "{deferredSearchQuery}".
+                  para &quot;{deferredSearchQuery}&quot;.
                 </div>
               )}
 

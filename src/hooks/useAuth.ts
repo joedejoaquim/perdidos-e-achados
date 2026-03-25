@@ -14,7 +14,7 @@ let authSnapshot: AuthSnapshot = { user: null, error: null };
 let authSnapshotReady = false;
 let pendingAuthSnapshot: Promise<AuthSnapshot> | null = null;
 
-function buildFallbackUser(authUser: { id: string; email?: string; user_metadata?: any; email_confirmed_at?: string }): User {
+function buildFallbackUser(authUser: { id: string; email?: string; user_metadata?: Record<string, any>; email_confirmed_at?: string }): User {
   return {
     id: authUser.id,
     email: authUser.email || "",
@@ -85,7 +85,7 @@ export const useAuth = ({ enabled = true }: UseAuthOptions = {}) => {
       if (event === "SIGNED_IN") { await syncState(true); router.refresh(); }
     });
     return () => { isMounted = false; data?.subscription.unsubscribe(); };
-  }, [enabled, router]);
+  }, [enabled, router, authContext]);
 
   return { user, loading, error };
 };

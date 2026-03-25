@@ -89,8 +89,8 @@ export default function RegisterPage() {
       }
 
       window.location.assign("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar conta");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao criar conta");
     } finally {
       setLoading(false);
     }

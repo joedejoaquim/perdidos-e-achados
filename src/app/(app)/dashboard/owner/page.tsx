@@ -74,8 +74,8 @@ export default function OwnerDashboard() {
   const [status, setStatus] = useState("all");
   const [city, setCity] = useState("");
   const [data, setData] = useState<OwnerDashboardData | null>(null);
-  const [_loading, setLoading] = useState(true);
-  const [_claimingItemId, setClaimingItemId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [claimingItemId, setClaimingItemId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
