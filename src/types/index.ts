@@ -104,6 +104,19 @@ export interface UserBadge {
 // Notifications
 export type NotificationType = "claim_received" | "claim_updated" | "payment_released" | "new_match";
 
+export interface UserNotificationPreferences {
+  id?: string;
+  user_id: string;
+  push_enabled: boolean;
+  email_enabled: boolean;
+  nearby_enabled: boolean;
+  weekly_summary: boolean;
+  sound_enabled: boolean;
+  vibration_enabled: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 export interface Notification {
   id: string;
   user_id: string;

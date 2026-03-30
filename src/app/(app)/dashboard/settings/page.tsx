@@ -5,17 +5,7 @@ import { m } from 'framer-motion';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-
-type NotifKey = 'push' | 'email' | 'nearby' | 'weekly' | 'sound' | 'vibration';
-
-const defaultNotifs: Record<NotifKey, boolean> = {
-  push: true,
-  email: true,
-  nearby: true,
-  weekly: false,
-  sound: true,
-  vibration: true,
-};
+import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -23,13 +13,10 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>(defaultNotifs);
+  const { prefs, loading: notifsLoading, saving: notifsSaving, toggle: toggleNotif } = useNotificationPreferences();
   const [privacy, setPrivacy] = useState({ publicProfile: true, allowContact: false });
   const [visibilidade, setVisibilidade] = useState('Apenas amigos');
   const [showVisibilidadeMenu, setShowVisibilidadeMenu] = useState(false);
-
-  const toggleNotif = (key: NotifKey) =>
-    setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
 
   const handleDeleteAccount = () => {
     if (confirm('Tem certeza que deseja excluir sua conta? Esta ação é irreversível.')) {
@@ -202,70 +189,80 @@ export default function SettingsPage() {
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-6">Gerencie como você deseja ser alertado sobre seus itens e atividades.</p>
                 </m.div>
 
-                {/* Grupo principal */}
-                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
-                  {([
-                    { key: 'push',    icon: 'notifications_active', label: 'Notificações Push',           desc: 'Receba alertas em tempo real' },
-                    { key: 'email',   icon: 'mail',                  label: 'E-mail',                      desc: 'Atualizações por e-mail' },
-                    { key: 'nearby',  icon: 'near_me',               label: 'Notificações de Achados Próximos', desc: 'Itens encontrados perto de você' },
-                    { key: 'weekly',  icon: 'calendar_month',        label: 'Resumo Semanal',              desc: 'Receba um resumo toda segunda-feira' },
-                  ] as { key: NotifKey; icon: string; label: string; desc: string }[]).map(item => (
-                    <div key={item.key} className="flex items-center gap-4 px-5 py-4">
-                      <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.label}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => toggleNotif(item.key)}
-                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${notifs[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                        aria-label={`Toggle ${item.label}`}
-                      >
-                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${notifs[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
-                          {notifs[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
-                        </span>
-                      </button>
-                    </div>
-                  ))}
-                </m.div>
+                {notifsLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+                  </div>
+                ) : (
+                  <>
+                    {/* Grupo principal */}
+                    <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                      {([
+                        { key: 'push_enabled',    icon: 'notifications_active', label: 'Notificações Push',                desc: 'Receba alertas em tempo real' },
+                        { key: 'email_enabled',   icon: 'mail',                  label: 'E-mail',                           desc: 'Atualizações por e-mail' },
+                        { key: 'nearby_enabled',  icon: 'near_me',               label: 'Notificações de Achados Próximos', desc: 'Itens encontrados perto de você' },
+                        { key: 'weekly_summary',  icon: 'calendar_month',        label: 'Resumo Semanal',                   desc: 'Receba um resumo toda segunda-feira' },
+                      ] as { key: keyof typeof prefs; icon: string; label: string; desc: string }[]).map(item => (
+                        <div key={item.key} className="flex items-center gap-4 px-5 py-4">
+                          <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.label}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+                          </div>
+                          <button
+                            onClick={() => toggleNotif(item.key as Parameters<typeof toggleNotif>[0])}
+                            disabled={notifsSaving}
+                            className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${prefs?.[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                            aria-label={`Toggle ${item.label}`}
+                          >
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${prefs?.[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
+                              {prefs?.[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
+                            </span>
+                          </button>
+                        </div>
+                      ))}
+                    </m.div>
 
-                {/* Sons & Vibração */}
-                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
-                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Sons & Vibração</p>
-                  {([
-                    { key: 'sound',     icon: 'volume_up',  label: 'Som de notificação', desc: 'Reproduzir um som ao receber alerta' },
-                    { key: 'vibration', icon: 'vibration',  label: 'Vibração',            desc: 'Vibrar dispositivo para alertas críticos' },
-                  ] as { key: NotifKey; icon: string; label: string; desc: string }[]).map(item => (
-                    <div key={item.key} className="flex items-center gap-4 px-5 py-4">
-                      <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.label}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => toggleNotif(item.key)}
-                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${notifs[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                        aria-label={`Toggle ${item.label}`}
-                      >
-                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${notifs[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
-                          {notifs[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
-                        </span>
-                      </button>
-                    </div>
-                  ))}
-                </m.div>
+                    {/* Sons & Vibração */}
+                    <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                      <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Sons & Vibração</p>
+                      {([
+                        { key: 'sound_enabled',     icon: 'volume_up',  label: 'Som de notificação', desc: 'Reproduzir um som ao receber alerta' },
+                        { key: 'vibration_enabled', icon: 'vibration',  label: 'Vibração',            desc: 'Vibrar dispositivo para alertas críticos' },
+                      ] as { key: keyof typeof prefs; icon: string; label: string; desc: string }[]).map(item => (
+                        <div key={item.key} className="flex items-center gap-4 px-5 py-4">
+                          <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.label}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+                          </div>
+                          <button
+                            onClick={() => toggleNotif(item.key as Parameters<typeof toggleNotif>[0])}
+                            disabled={notifsSaving}
+                            className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${prefs?.[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                            aria-label={`Toggle ${item.label}`}
+                          >
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${prefs?.[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
+                              {prefs?.[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
+                            </span>
+                          </button>
+                        </div>
+                      ))}
+                    </m.div>
 
-                {/* Aviso */}
-                <m.div variants={itemVariants} className="flex gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-2xl px-5 py-4">
-                  <span className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5">info</span>
-                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                    Atenção: Algumas notificações críticas de segurança (como recuperação de senha) não podem ser desativadas por motivos de segurança.
-                  </p>
-                </m.div>
+                    {/* Aviso */}
+                    <m.div variants={itemVariants} className="flex gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-2xl px-5 py-4">
+                      <span className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5">info</span>
+                      <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                        Atenção: Algumas notificações críticas de segurança (como recuperação de senha) não podem ser desativadas por motivos de segurança.
+                      </p>
+                    </m.div>
+                  </>
+                )}
               </div>
             )}
 
