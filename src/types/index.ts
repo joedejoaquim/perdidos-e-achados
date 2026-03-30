@@ -104,6 +104,18 @@ export interface UserBadge {
 // Notifications
 export type NotificationType = "claim_received" | "claim_updated" | "payment_released" | "new_match";
 
+export type ItemsVisibility = "everyone" | "friends" | "only_me";
+
+export interface UserPrivacySettings {
+  id?: string;
+  user_id: string;
+  public_profile: boolean;
+  allow_contact: boolean;
+  items_visibility: ItemsVisibility;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 export interface UserNotificationPreferences {
   id?: string;
   user_id: string;

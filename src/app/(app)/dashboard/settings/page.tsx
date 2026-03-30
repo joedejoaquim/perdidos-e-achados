@@ -6,6 +6,8 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { usePrivacySettings } from '@/hooks/usePrivacySettings';
+import { ItemsVisibility } from '@/types';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -14,13 +16,22 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { prefs, loading: notifsLoading, saving: notifsSaving, toggle: toggleNotif } = useNotificationPreferences();
-  const [privacy, setPrivacy] = useState({ publicProfile: true, allowContact: false });
-  const [visibilidade, setVisibilidade] = useState('Apenas amigos');
+  const {
+    settings: privacySettings, loading: privacyLoading, saving: privacySaving,
+    togglePublicProfile, toggleAllowContact, setVisibility,
+    exportData, deleteAccount,
+  } = usePrivacySettings();
+
   const [showVisibilidadeMenu, setShowVisibilidadeMenu] = useState(false);
 
-  const handleDeleteAccount = () => {
-    if (confirm('Tem certeza que deseja excluir sua conta? Esta ação é irreversível.')) {
-      alert('Funcionalidade em desenvolvimento.');
+  const handleDeleteAccount = async () => {
+    if (!confirm('Tem certeza que deseja excluir sua conta? Esta ação é irreversível.')) return;
+    const ok = await deleteAccount();
+    if (ok) {
+      await supabase.auth.signOut();
+      window.location.href = '/auth/login';
+    } else {
+      alert('Erro ao excluir conta. Tente novamente.');
     }
   };
 
@@ -274,116 +285,130 @@ export default function SettingsPage() {
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gerencie como seus dados são exibidos e quem pode interagir com suas postagens no ecossistema Achados.</p>
                 </m.div>
 
-                {/* Privacidade */}
-                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
-                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Privacidade</p>
-
-                  {/* Mostrar perfil */}
-                  <div className="flex items-center justify-between px-5 py-4">
-                    <p className="text-sm font-medium text-slate-800 dark:text-white">Mostrar meu perfil publicamente</p>
-                    <button
-                      onClick={() => setPrivacy(p => ({ ...p, publicProfile: !p.publicProfile }))}
-                      className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${privacy.publicProfile ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                      aria-label="Toggle perfil público"
-                    >
-                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacy.publicProfile ? 'translate-x-6' : 'translate-x-0'}`} />
-                    </button>
+                {privacyLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
                   </div>
+                ) : (
+                  <>
+                    {/* Privacidade */}
+                    <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                      <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Privacidade</p>
 
-                  {/* Permitir contato */}
-                  <div className="flex items-center justify-between px-5 py-4">
-                    <p className="text-sm font-medium text-slate-800 dark:text-white">Permitir que outros me contactem</p>
-                    <button
-                      onClick={() => setPrivacy(p => ({ ...p, allowContact: !p.allowContact }))}
-                      className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${privacy.allowContact ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                      aria-label="Toggle permitir contato"
-                    >
-                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacy.allowContact ? 'translate-x-6' : 'translate-x-0'}`} />
-                    </button>
-                  </div>
-
-                  {/* Visibilidade dos achados */}
-                  <div className="flex items-center justify-between px-5 py-4 relative">
-                    <p className="text-sm font-medium text-slate-800 dark:text-white">Quem pode ver meus achados</p>
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowVisibilidadeMenu(v => !v)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-white shadow-sm hover:shadow transition-all"
-                      >
-                        {visibilidade}
-                        <span className="material-symbols-outlined text-[16px]">expand_more</span>
-                      </button>
-                      {showVisibilidadeMenu && (
-                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-10 overflow-hidden min-w-[160px]">
-                          {['Todos', 'Apenas amigos', 'Somente eu'].map(opt => (
-                            <button
-                              key={opt}
-                              onClick={() => { setVisibilidade(opt); setShowVisibilidadeMenu(false); }}
-                              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${visibilidade === opt ? 'font-bold text-primary' : 'text-slate-700 dark:text-white'}`}
-                            >
-                              {opt}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </m.div>
-
-                {/* Dados & Permissões */}
-                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
-                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Dados & Permissões</p>
-                  {[
-                    { icon: 'apps', label: 'Permissões do Aplicativo' },
-                    { icon: 'storage', label: 'Gerenciar dados armazenados' },
-                    { icon: 'download', label: 'Exportar meus dados' },
-                  ].map(item => (
-                    <button key={item.label} className="flex items-center gap-4 px-5 py-4 w-full hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
-                      <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[18px] text-slate-600 dark:text-slate-300">{item.icon}</span>
+                      {/* Mostrar perfil */}
+                      <div className="flex items-center justify-between px-5 py-4">
+                        <p className="text-sm font-medium text-slate-800 dark:text-white">Mostrar meu perfil publicamente</p>
+                        <button
+                          onClick={togglePublicProfile}
+                          disabled={privacySaving}
+                          className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${privacySettings?.public_profile ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                          aria-label="Toggle perfil público"
+                        >
+                          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacySettings?.public_profile ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
                       </div>
-                      <span className="flex-1 text-sm font-medium text-slate-800 dark:text-white text-left">{item.label}</span>
-                      <span className="material-symbols-outlined text-[18px] text-slate-400">chevron_right</span>
-                    </button>
-                  ))}
-                </m.div>
 
-                {/* Zona de Risco */}
-                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl mb-6">
-                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Zona de Risco</p>
-                  <div className="px-5 pb-4">
-                    <button
-                      onClick={handleDeleteAccount}
-                      className="flex items-center gap-3 text-red-600 hover:text-red-700 transition-colors text-sm font-semibold"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">close</span>
-                      Excluir minha conta
-                    </button>
-                  </div>
-                </m.div>
+                      {/* Permitir contato */}
+                      <div className="flex items-center justify-between px-5 py-4">
+                        <p className="text-sm font-medium text-slate-800 dark:text-white">Permitir que outros me contactem</p>
+                        <button
+                          onClick={toggleAllowContact}
+                          disabled={privacySaving}
+                          className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${privacySettings?.allow_contact ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                          aria-label="Toggle permitir contato"
+                        >
+                          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacySettings?.allow_contact ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
 
-                {/* Cards rodapé */}
-                <m.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-primary rounded-2xl p-5 text-white relative overflow-hidden">
-                    <p className="font-black text-base leading-snug mb-1">Privacidade Total no<br/>Localizador PRO</p>
-                    <p className="text-xs text-white/80 mb-4">Ative o modo fantasma e oculte sua localização em tempo real.</p>
-                    <button
-                      onClick={() => setActiveTab('assinatura')}
-                      className="px-4 py-2 bg-white text-primary text-xs font-bold rounded-lg hover:bg-white/90 transition-colors"
-                    >
-                      Saber Mais →
-                    </button>
-                    <span className="material-symbols-outlined absolute -bottom-3 -right-3 text-[80px] text-white/10">location_on</span>
-                  </div>
-                  <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-5 relative overflow-hidden">
-                    <p className="font-bold text-slate-800 dark:text-white text-base mb-1">Dúvidas sobre seus dados?</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Leia nossa política de curadoria digital e entenda como protegemos você.</p>
-                    <button className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
-                      Ver Política <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                    </button>
-                    <span className="material-symbols-outlined absolute -bottom-3 -right-3 text-[80px] text-slate-200 dark:text-slate-700">search</span>
-                  </div>
-                </m.div>
+                      {/* Visibilidade dos achados */}
+                      <div className="flex items-center justify-between px-5 py-4 relative">
+                        <p className="text-sm font-medium text-slate-800 dark:text-white">Quem pode ver meus achados</p>
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowVisibilidadeMenu(v => !v)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-white shadow-sm hover:shadow transition-all"
+                          >
+                            {{ everyone: 'Todos', friends: 'Apenas amigos', only_me: 'Somente eu' }[privacySettings?.items_visibility ?? 'friends']}
+                            <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                          </button>
+                          {showVisibilidadeMenu && (
+                            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-10 overflow-hidden min-w-[160px]">
+                              {([
+                                { value: 'everyone', label: 'Todos' },
+                                { value: 'friends',  label: 'Apenas amigos' },
+                                { value: 'only_me',  label: 'Somente eu' },
+                              ] as { value: ItemsVisibility; label: string }[]).map(opt => (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => { setVisibility(opt.value); setShowVisibilidadeMenu(false); }}
+                                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${privacySettings?.items_visibility === opt.value ? 'font-bold text-primary' : 'text-slate-700 dark:text-white'}`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </m.div>
+
+                    {/* Dados & Permissões */}
+                    <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                      <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Dados & Permissões</p>
+                      {[
+                        { icon: 'apps',     label: 'Permissões do Aplicativo',    onClick: () => alert('Em breve') },
+                        { icon: 'storage',  label: 'Gerenciar dados armazenados', onClick: () => alert('Em breve') },
+                        { icon: 'download', label: 'Exportar meus dados',         onClick: exportData },
+                      ].map(item => (
+                        <button key={item.label} onClick={item.onClick} className="flex items-center gap-4 px-5 py-4 w-full hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+                          <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[18px] text-slate-600 dark:text-slate-300">{item.icon}</span>
+                          </div>
+                          <span className="flex-1 text-sm font-medium text-slate-800 dark:text-white text-left">{item.label}</span>
+                          <span className="material-symbols-outlined text-[18px] text-slate-400">chevron_right</span>
+                        </button>
+                      ))}
+                    </m.div>
+
+                    {/* Zona de Risco */}
+                    <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl mb-6">
+                      <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Zona de Risco</p>
+                      <div className="px-5 pb-4">
+                        <button
+                          onClick={handleDeleteAccount}
+                          className="flex items-center gap-3 text-red-600 hover:text-red-700 transition-colors text-sm font-semibold"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">close</span>
+                          Excluir minha conta
+                        </button>
+                      </div>
+                    </m.div>
+
+                    {/* Cards rodapé */}
+                    <m.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-primary rounded-2xl p-5 text-white relative overflow-hidden">
+                        <p className="font-black text-base leading-snug mb-1">Privacidade Total no<br/>Localizador PRO</p>
+                        <p className="text-xs text-white/80 mb-4">Ative o modo fantasma e oculte sua localização em tempo real.</p>
+                        <button
+                          onClick={() => setActiveTab('assinatura')}
+                          className="px-4 py-2 bg-white text-primary text-xs font-bold rounded-lg hover:bg-white/90 transition-colors"
+                        >
+                          Saber Mais →
+                        </button>
+                        <span className="material-symbols-outlined absolute -bottom-3 -right-3 text-[80px] text-white/10">location_on</span>
+                      </div>
+                      <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-5 relative overflow-hidden">
+                        <p className="font-bold text-slate-800 dark:text-white text-base mb-1">Dúvidas sobre seus dados?</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Leia nossa política de curadoria digital e entenda como protegemos você.</p>
+                        <button className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
+                          Ver Política <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </button>
+                        <span className="material-symbols-outlined absolute -bottom-3 -right-3 text-[80px] text-slate-200 dark:text-slate-700">search</span>
+                      </div>
+                    </m.div>
+                  </>
+                )}
               </div>
             )}
 
