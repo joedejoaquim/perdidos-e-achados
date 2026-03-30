@@ -6,12 +6,36 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 
+type NotifKey = 'push' | 'email' | 'nearby' | 'weekly' | 'sound' | 'vibration';
+
+const defaultNotifs: Record<NotifKey, boolean> = {
+  push: true,
+  email: true,
+  nearby: true,
+  weekly: false,
+  sound: true,
+  vibration: true,
+};
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('perfil');
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>(defaultNotifs);
+  const [privacy, setPrivacy] = useState({ publicProfile: true, allowContact: false });
+  const [visibilidade, setVisibilidade] = useState('Apenas amigos');
+  const [showVisibilidadeMenu, setShowVisibilidadeMenu] = useState(false);
+
+  const toggleNotif = (key: NotifKey) =>
+    setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const handleDeleteAccount = () => {
+    if (confirm('Tem certeza que deseja excluir sua conta? Esta ação é irreversível.')) {
+      alert('Funcionalidade em desenvolvimento.');
+    }
+  };
 
   const handlePhotoClick = () => {
     fileInputRef.current?.click();
@@ -171,10 +195,275 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeTab !== 'perfil' && (
-              <div className="h-64 flex flex-col items-center justify-center text-slate-400 opacity-60">
-                 <span className="material-symbols-outlined text-6xl mb-4 text-slate-300">construction</span>
-                 <p className="font-semibold text-slate-600 dark:text-slate-300">Esta aba ainda está sendo construída</p>
+            {activeTab === 'notificacoes' && (
+              <div className="max-w-xl">
+                <m.div variants={itemVariants}>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Notificações</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-6">Gerencie como você deseja ser alertado sobre seus itens e atividades.</p>
+                </m.div>
+
+                {/* Grupo principal */}
+                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                  {([
+                    { key: 'push',    icon: 'notifications_active', label: 'Notificações Push',           desc: 'Receba alertas em tempo real' },
+                    { key: 'email',   icon: 'mail',                  label: 'E-mail',                      desc: 'Atualizações por e-mail' },
+                    { key: 'nearby',  icon: 'near_me',               label: 'Notificações de Achados Próximos', desc: 'Itens encontrados perto de você' },
+                    { key: 'weekly',  icon: 'calendar_month',        label: 'Resumo Semanal',              desc: 'Receba um resumo toda segunda-feira' },
+                  ] as { key: NotifKey; icon: string; label: string; desc: string }[]).map(item => (
+                    <div key={item.key} className="flex items-center gap-4 px-5 py-4">
+                      <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.label}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => toggleNotif(item.key)}
+                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${notifs[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                        aria-label={`Toggle ${item.label}`}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${notifs[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
+                          {notifs[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </m.div>
+
+                {/* Sons & Vibração */}
+                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Sons & Vibração</p>
+                  {([
+                    { key: 'sound',     icon: 'volume_up',  label: 'Som de notificação', desc: 'Reproduzir um som ao receber alerta' },
+                    { key: 'vibration', icon: 'vibration',  label: 'Vibração',            desc: 'Vibrar dispositivo para alertas críticos' },
+                  ] as { key: NotifKey; icon: string; label: string; desc: string }[]).map(item => (
+                    <div key={item.key} className="flex items-center gap-4 px-5 py-4">
+                      <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.label}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => toggleNotif(item.key)}
+                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${notifs[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                        aria-label={`Toggle ${item.label}`}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${notifs[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
+                          {notifs[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </m.div>
+
+                {/* Aviso */}
+                <m.div variants={itemVariants} className="flex gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-2xl px-5 py-4">
+                  <span className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5">info</span>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                    Atenção: Algumas notificações críticas de segurança (como recuperação de senha) não podem ser desativadas por motivos de segurança.
+                  </p>
+                </m.div>
+              </div>
+            )}
+
+            {activeTab === 'seguranca' && (
+              <div className="max-w-xl">
+                <m.div variants={itemVariants} className="mb-6">
+                  <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Central de Segurança</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white">Privacidade & App</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gerencie como seus dados são exibidos e quem pode interagir com suas postagens no ecossistema Achados.</p>
+                </m.div>
+
+                {/* Privacidade */}
+                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Privacidade</p>
+
+                  {/* Mostrar perfil */}
+                  <div className="flex items-center justify-between px-5 py-4">
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">Mostrar meu perfil publicamente</p>
+                    <button
+                      onClick={() => setPrivacy(p => ({ ...p, publicProfile: !p.publicProfile }))}
+                      className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${privacy.publicProfile ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                      aria-label="Toggle perfil público"
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacy.publicProfile ? 'translate-x-6' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  {/* Permitir contato */}
+                  <div className="flex items-center justify-between px-5 py-4">
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">Permitir que outros me contactem</p>
+                    <button
+                      onClick={() => setPrivacy(p => ({ ...p, allowContact: !p.allowContact }))}
+                      className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${privacy.allowContact ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                      aria-label="Toggle permitir contato"
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacy.allowContact ? 'translate-x-6' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  {/* Visibilidade dos achados */}
+                  <div className="flex items-center justify-between px-5 py-4 relative">
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">Quem pode ver meus achados</p>
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowVisibilidadeMenu(v => !v)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-white shadow-sm hover:shadow transition-all"
+                      >
+                        {visibilidade}
+                        <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                      </button>
+                      {showVisibilidadeMenu && (
+                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-10 overflow-hidden min-w-[160px]">
+                          {['Todos', 'Apenas amigos', 'Somente eu'].map(opt => (
+                            <button
+                              key={opt}
+                              onClick={() => { setVisibilidade(opt); setShowVisibilidadeMenu(false); }}
+                              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${visibilidade === opt ? 'font-bold text-primary' : 'text-slate-700 dark:text-white'}`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </m.div>
+
+                {/* Dados & Permissões */}
+                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
+                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Dados & Permissões</p>
+                  {[
+                    { icon: 'apps', label: 'Permissões do Aplicativo' },
+                    { icon: 'storage', label: 'Gerenciar dados armazenados' },
+                    { icon: 'download', label: 'Exportar meus dados' },
+                  ].map(item => (
+                    <button key={item.label} className="flex items-center gap-4 px-5 py-4 w-full hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+                      <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[18px] text-slate-600 dark:text-slate-300">{item.icon}</span>
+                      </div>
+                      <span className="flex-1 text-sm font-medium text-slate-800 dark:text-white text-left">{item.label}</span>
+                      <span className="material-symbols-outlined text-[18px] text-slate-400">chevron_right</span>
+                    </button>
+                  ))}
+                </m.div>
+
+                {/* Zona de Risco */}
+                <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl mb-6">
+                  <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Zona de Risco</p>
+                  <div className="px-5 pb-4">
+                    <button
+                      onClick={handleDeleteAccount}
+                      className="flex items-center gap-3 text-red-600 hover:text-red-700 transition-colors text-sm font-semibold"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">close</span>
+                      Excluir minha conta
+                    </button>
+                  </div>
+                </m.div>
+
+                {/* Cards rodapé */}
+                <m.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-primary rounded-2xl p-5 text-white relative overflow-hidden">
+                    <p className="font-black text-base leading-snug mb-1">Privacidade Total no<br/>Localizador PRO</p>
+                    <p className="text-xs text-white/80 mb-4">Ative o modo fantasma e oculte sua localização em tempo real.</p>
+                    <button
+                      onClick={() => setActiveTab('assinatura')}
+                      className="px-4 py-2 bg-white text-primary text-xs font-bold rounded-lg hover:bg-white/90 transition-colors"
+                    >
+                      Saber Mais →
+                    </button>
+                    <span className="material-symbols-outlined absolute -bottom-3 -right-3 text-[80px] text-white/10">location_on</span>
+                  </div>
+                  <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-5 relative overflow-hidden">
+                    <p className="font-bold text-slate-800 dark:text-white text-base mb-1">Dúvidas sobre seus dados?</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Leia nossa política de curadoria digital e entenda como protegemos você.</p>
+                    <button className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
+                      Ver Política <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    </button>
+                    <span className="material-symbols-outlined absolute -bottom-3 -right-3 text-[80px] text-slate-200 dark:text-slate-700">search</span>
+                  </div>
+                </m.div>
+              </div>
+            )}
+
+            {activeTab === 'assinatura' && (
+              <div className="max-w-2xl">
+                {/* Hero PRO */}
+                <m.div variants={itemVariants} className="bg-primary rounded-3xl p-8 text-white text-center mb-8 relative overflow-hidden">
+                  <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span className="material-symbols-outlined text-[28px] text-white">location_on</span>
+                  </div>
+                  <h2 className="text-3xl font-black mb-2">Localizador PRO</h2>
+                  <p className="text-white/80 text-sm mb-6">Encontre seus itens com precisão e velocidade</p>
+                  <button className="px-8 py-3 bg-white text-primary font-bold rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-lg text-sm">
+                    Assinar agora — R$ 14,90/mês
+                  </button>
+                  {/* decoração */}
+                  <span className="material-symbols-outlined absolute -bottom-6 -left-6 text-[120px] text-white/5">location_on</span>
+                  <span className="material-symbols-outlined absolute -top-6 -right-6 text-[120px] text-white/5">shield</span>
+                </m.div>
+
+                {/* Por que ser PRO */}
+                <m.div variants={itemVariants} className="grid sm:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Por que ser PRO?</h3>
+                    <ul className="space-y-3">
+                      {[
+                        'Rastreamento em tempo real',
+                        'Histórico completo de localizações',
+                        'Alertas de zona personalizados',
+                        'Suporte prioritário 24h',
+                        'Sem anúncios',
+                      ].map(feat => (
+                        <li key={feat} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+                          <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[14px] text-primary">check</span>
+                          </span>
+                          {feat}
+                        </li>
+                      ))}
+                    </ul>
+                    <button className="mt-5 text-sm font-bold text-primary flex items-center gap-1 hover:underline">
+                      Comparar planos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </button>
+                  </div>
+
+                  {/* Visual cards */}
+                  <div className="flex flex-col gap-3">
+                    <div className="bg-slate-800 rounded-2xl overflow-hidden h-36 flex items-end p-3 relative">
+                      <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-emerald-400 to-slate-800" />
+                      <span className="material-symbols-outlined absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[64px] text-emerald-400/40">map</span>
+                      <div className="relative z-10">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Localização Precisa</p>
+                        <p className="text-xs text-white font-semibold">Atualizado agora</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl h-20 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[36px] text-primary/60">my_location</span>
+                      </div>
+                      <div className="bg-primary rounded-2xl h-20 flex flex-col items-center justify-center gap-1">
+                        <span className="material-symbols-outlined text-[28px] text-white">verified_user</span>
+                        <p className="text-[10px] font-bold text-white uppercase tracking-widest">Premium Security</p>
+                      </div>
+                    </div>
+                  </div>
+                </m.div>
+
+                {/* CTA dúvidas */}
+                <m.div variants={itemVariants} className="flex items-center justify-between gap-4 bg-slate-100 dark:bg-slate-800 rounded-2xl px-6 py-5">
+                  <div>
+                    <p className="font-bold text-slate-800 dark:text-white text-sm">Ficou com alguma dúvida?</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nossa equipe está pronta para te ajudar a escolher o melhor plano.</p>
+                  </div>
+                  <button className="shrink-0 px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-xl hover:scale-105 active:scale-95 transition-all shadow">
+                    Falar com consultor
+                  </button>
+                </m.div>
               </div>
             )}
 
