@@ -221,6 +221,24 @@ export interface KYCData {
   selfie_url: string;
 }
 
+// Subscriptions
+export type SubscriptionPlan = "free" | "pro";
+export type SubscriptionStatus = "active" | "inactive" | "cancelled" | "past_due";
+
+export interface Subscription {
+  id?: string;
+  user_id: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  current_period_start?: Date;
+  current_period_end?: Date;
+  cancel_at_period_end?: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 // Dashboard Stats
 export interface DashboardStats {
   total_items_found: number;

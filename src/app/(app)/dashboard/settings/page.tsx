@@ -7,11 +7,21 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { usePrivacySettings } from '@/hooks/usePrivacySettings';
+import { useSubscription } from '@/hooks/useSubscription';
 import { ItemsVisibility } from '@/types';
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('perfil');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab')) setActiveTab(params.get('tab')!);
+    if (params.get('success') === '1') {
+      // limpa o URL sem reload
+      window.history.replaceState({}, '', window.location.pathname + '?tab=assinatura');
+    }
+  }, []);
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,6 +31,7 @@ export default function SettingsPage() {
     togglePublicProfile, toggleAllowContact, setVisibility,
     exportData, deleteAccount,
   } = usePrivacySettings();
+  const { subscription, loading: subLoading, actionLoading: subActionLoading, isPro, subscribe, cancel: cancelSub } = useSubscription();
 
   const [showVisibilidadeMenu, setShowVisibilidadeMenu] = useState(false);
 
@@ -414,78 +425,118 @@ export default function SettingsPage() {
 
             {activeTab === 'assinatura' && (
               <div className="max-w-2xl">
-                {/* Hero PRO */}
-                <m.div variants={itemVariants} className="bg-primary rounded-3xl p-8 text-white text-center mb-8 relative overflow-hidden">
-                  <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span className="material-symbols-outlined text-[28px] text-white">location_on</span>
+                {subLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
                   </div>
-                  <h2 className="text-3xl font-black mb-2">Localizador PRO</h2>
-                  <p className="text-white/80 text-sm mb-6">Encontre seus itens com precisão e velocidade</p>
-                  <button className="px-8 py-3 bg-white text-primary font-bold rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-lg text-sm">
-                    Assinar agora — R$ 14,90/mês
-                  </button>
-                  {/* decoração */}
-                  <span className="material-symbols-outlined absolute -bottom-6 -left-6 text-[120px] text-white/5">location_on</span>
-                  <span className="material-symbols-outlined absolute -top-6 -right-6 text-[120px] text-white/5">shield</span>
-                </m.div>
-
-                {/* Por que ser PRO */}
-                <m.div variants={itemVariants} className="grid sm:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Por que ser PRO?</h3>
-                    <ul className="space-y-3">
-                      {[
-                        'Rastreamento em tempo real',
-                        'Histórico completo de localizações',
-                        'Alertas de zona personalizados',
-                        'Suporte prioritário 24h',
-                        'Sem anúncios',
-                      ].map(feat => (
-                        <li key={feat} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
-                          <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-[14px] text-primary">check</span>
-                          </span>
-                          {feat}
-                        </li>
-                      ))}
-                    </ul>
-                    <button className="mt-5 text-sm font-bold text-primary flex items-center gap-1 hover:underline">
-                      Comparar planos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                    </button>
-                  </div>
-
-                  {/* Visual cards */}
-                  <div className="flex flex-col gap-3">
-                    <div className="bg-slate-800 rounded-2xl overflow-hidden h-36 flex items-end p-3 relative">
-                      <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-emerald-400 to-slate-800" />
-                      <span className="material-symbols-outlined absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[64px] text-emerald-400/40">map</span>
-                      <div className="relative z-10">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Localização Precisa</p>
-                        <p className="text-xs text-white font-semibold">Atualizado agora</p>
+                ) : (
+                  <>
+                    {/* Hero PRO */}
+                    <m.div variants={itemVariants} className={`rounded-3xl p-8 text-white text-center mb-8 relative overflow-hidden ${isPro ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 'bg-primary'}`}>
+                      <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span className="material-symbols-outlined text-[28px] text-white">{isPro ? 'workspace_premium' : 'location_on'}</span>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl h-20 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[36px] text-primary/60">my_location</span>
-                      </div>
-                      <div className="bg-primary rounded-2xl h-20 flex flex-col items-center justify-center gap-1">
-                        <span className="material-symbols-outlined text-[28px] text-white">verified_user</span>
-                        <p className="text-[10px] font-bold text-white uppercase tracking-widest">Premium Security</p>
-                      </div>
-                    </div>
-                  </div>
-                </m.div>
+                      <h2 className="text-3xl font-black mb-2">Localizador PRO</h2>
+                      {isPro ? (
+                        <>
+                          <p className="text-white/80 text-sm mb-2">Você é um assinante PRO</p>
+                          {subscription?.current_period_end && (
+                            <p className="text-white/60 text-xs mb-6">
+                              Renova em {new Date(subscription.current_period_end).toLocaleDateString('pt-BR')}
+                              {subscription.cancel_at_period_end && ' · Cancelamento agendado'}
+                            </p>
+                          )}
+                          {!subscription?.cancel_at_period_end ? (
+                            <button
+                              onClick={cancelSub}
+                              disabled={subActionLoading}
+                              className="px-6 py-2.5 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-50"
+                            >
+                              {subActionLoading ? 'Aguarde...' : 'Cancelar assinatura'}
+                            </button>
+                          ) : (
+                            <p className="text-white/70 text-xs bg-white/10 rounded-xl px-4 py-2 inline-block">
+                              Acesso ativo até o fim do período
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-white/80 text-sm mb-6">Encontre seus itens com precisão e velocidade</p>
+                          <button
+                            onClick={subscribe}
+                            disabled={subActionLoading}
+                            className="px-8 py-3 bg-white text-primary font-bold rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-lg text-sm disabled:opacity-50"
+                          >
+                            {subActionLoading ? 'Redirecionando...' : 'Assinar agora — R$ 14,90/mês'}
+                          </button>
+                        </>
+                      )}
+                      <span className="material-symbols-outlined absolute -bottom-6 -left-6 text-[120px] text-white/5">location_on</span>
+                      <span className="material-symbols-outlined absolute -top-6 -right-6 text-[120px] text-white/5">shield</span>
+                    </m.div>
 
-                {/* CTA dúvidas */}
-                <m.div variants={itemVariants} className="flex items-center justify-between gap-4 bg-slate-100 dark:bg-slate-800 rounded-2xl px-6 py-5">
-                  <div>
-                    <p className="font-bold text-slate-800 dark:text-white text-sm">Ficou com alguma dúvida?</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nossa equipe está pronta para te ajudar a escolher o melhor plano.</p>
-                  </div>
-                  <button className="shrink-0 px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-xl hover:scale-105 active:scale-95 transition-all shadow">
-                    Falar com consultor
-                  </button>
-                </m.div>
+                    {/* Por que ser PRO */}
+                    <m.div variants={itemVariants} className="grid sm:grid-cols-2 gap-6 mb-8">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Por que ser PRO?</h3>
+                        <ul className="space-y-3">
+                          {[
+                            'Rastreamento em tempo real',
+                            'Histórico completo de localizações',
+                            'Alertas de zona personalizados',
+                            'Suporte prioritário 24h',
+                            'Sem anúncios',
+                          ].map(feat => (
+                            <li key={feat} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+                              <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${isPro ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-primary/10'}`}>
+                                <span className={`material-symbols-outlined text-[14px] ${isPro ? 'text-amber-500' : 'text-primary'}`}>check</span>
+                              </span>
+                              {feat}
+                            </li>
+                          ))}
+                        </ul>
+                        {!isPro && (
+                          <button onClick={subscribe} disabled={subActionLoading} className="mt-5 text-sm font-bold text-primary flex items-center gap-1 hover:underline disabled:opacity-50">
+                            Comparar planos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Visual cards */}
+                      <div className="flex flex-col gap-3">
+                        <div className="bg-slate-800 rounded-2xl overflow-hidden h-36 flex items-end p-3 relative">
+                          <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-emerald-400 to-slate-800" />
+                          <span className="material-symbols-outlined absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[64px] text-emerald-400/40">map</span>
+                          <div className="relative z-10">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Localização Precisa</p>
+                            <p className="text-xs text-white font-semibold">Atualizado agora</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl h-20 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[36px] text-primary/60">my_location</span>
+                          </div>
+                          <div className={`rounded-2xl h-20 flex flex-col items-center justify-center gap-1 ${isPro ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 'bg-primary'}`}>
+                            <span className="material-symbols-outlined text-[28px] text-white">verified_user</span>
+                            <p className="text-[10px] font-bold text-white uppercase tracking-widest">Premium Security</p>
+                          </div>
+                        </div>
+                      </div>
+                    </m.div>
+
+                    {/* CTA dúvidas */}
+                    <m.div variants={itemVariants} className="flex items-center justify-between gap-4 bg-slate-100 dark:bg-slate-800 rounded-2xl px-6 py-5">
+                      <div>
+                        <p className="font-bold text-slate-800 dark:text-white text-sm">Ficou com alguma dúvida?</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nossa equipe está pronta para te ajudar a escolher o melhor plano.</p>
+                      </div>
+                      <button className="shrink-0 px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-xl hover:scale-105 active:scale-95 transition-all shadow">
+                        Falar com consultor
+                      </button>
+                    </m.div>
+                  </>
+                )}
               </div>
             )}
 
