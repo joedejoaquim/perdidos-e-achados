@@ -8,8 +8,11 @@ export function useSubscription() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch("/api/settings/subscription")
       .then(r => r.json())
       .then(res => {
@@ -18,7 +21,9 @@ export function useSubscription() {
       })
       .catch(() => setError("Erro ao carregar assinatura"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [fetchKey]);
+
+  const refetch = useCallback(() => setFetchKey(k => k + 1), []);
 
   const isPro = subscription?.plan === "pro" && subscription?.status === "active";
 
@@ -37,7 +42,6 @@ export function useSubscription() {
   }, []);
 
   const cancel = useCallback(async () => {
-    if (!confirm("Tem certeza? Seu acesso PRO continuará até o fim do período atual.")) return;
     setActionLoading(true);
     try {
       const res = await fetch("/api/settings/subscription", { method: "DELETE" });
@@ -51,5 +55,5 @@ export function useSubscription() {
     }
   }, []);
 
-  return { subscription, loading, actionLoading, error, isPro, subscribe, cancel };
+  return { subscription, loading, actionLoading, error, isPro, subscribe, cancel, refetch };
 }

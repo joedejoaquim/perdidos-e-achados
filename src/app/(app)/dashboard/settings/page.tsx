@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { m } from 'framer-motion';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,6 +9,10 @@ import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { usePrivacySettings } from '@/hooks/usePrivacySettings';
 import { useSubscription } from '@/hooks/useSubscription';
 import { ItemsVisibility } from '@/types';
+import { ComparePlansModal } from '@/components/dashboard/ComparePlansModal';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
+import { useComparePlansModal } from '@/hooks/useComparePlansModal';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -31,9 +35,27 @@ export default function SettingsPage() {
     togglePublicProfile, toggleAllowContact, setVisibility,
     exportData, deleteAccount,
   } = usePrivacySettings();
-  const { subscription, loading: subLoading, actionLoading: subActionLoading, isPro, subscribe, cancel: cancelSub } = useSubscription();
+  const { subscription, loading: subLoading, actionLoading: subActionLoading, isPro, subscribe, cancel: cancelSub, error: subError, refetch: refetchSub } = useSubscription();
 
   const [showVisibilidadeMenu, setShowVisibilidadeMenu] = useState(false);
+  const { toasts, addToast, removeToast } = useToast();
+  const comparePlansModal = useComparePlansModal();
+  const comparePlansTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Fluxo de assinatura com feedback de toast
+  const handleSubscribe = useCallback(async () => {
+    await subscribe();
+  }, [subscribe]);
+
+  // Fluxo de cancelamento com feedback de toast
+  const handleCancelSubscription = useCallback(async () => {
+    await cancelSub();
+  }, [cancelSub]);
+
+  // Retry ao carregar assinatura
+  const handleRetrySubscription = useCallback(() => {
+    refetchSub();
+  }, [refetchSub]);
 
   const handleDeleteAccount = async () => {
     if (!confirm('Tem certeza que deseja excluir sua conta? Esta ação é irreversível.')) return;
@@ -497,8 +519,14 @@ export default function SettingsPage() {
                           ))}
                         </ul>
                         {!isPro && (
-                          <button onClick={subscribe} disabled={subActionLoading} className="mt-5 text-sm font-bold text-primary flex items-center gap-1 hover:underline disabled:opacity-50">
-                            Comparar planos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                          <button
+                            ref={comparePlansTriggerRef}
+                            onClick={() => comparePlansModal.open(comparePlansTriggerRef.current)}
+                            disabled={subActionLoading}
+                            className="mt-5 text-sm font-bold text-primary flex items-center gap-1 hover:underline disabled:opacity-50"
+                            aria-label="Abrir comparação de planos"
+                          >
+                            Comparar planos <span className="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span>
                           </button>
                         )}
                       </div>
@@ -543,6 +571,22 @@ export default function SettingsPage() {
           </m.div>
         </div>
       </main>
+
+      <ComparePlansModal
+        isOpen={comparePlansModal.isOpen}
+        onClose={comparePlansModal.close}
+        subscription={subscription}
+        subLoading={subLoading}
+        subError={subError}
+        subActionLoading={subActionLoading}
+        isPro={isPro}
+        onSubscribe={handleSubscribe}
+        onCancelSubscription={handleCancelSubscription}
+        onRetry={handleRetrySubscription}
+        onToast={addToast}
+      />
+
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
