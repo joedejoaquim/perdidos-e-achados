@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { Lock, Medal, ShieldCheck, Sparkles, Star } from "lucide-react";
 
 import { User } from "@/types";
@@ -101,11 +102,12 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <div className="relative">
           <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-primary to-sky-400 p-1">
             {user.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 alt={user.name}
                 className="h-full w-full rounded-full bg-white object-cover"
                 src={user.avatar_url}
+                width={80}
+                height={80}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-lg font-bold text-primary">

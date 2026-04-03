@@ -35,7 +35,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* Simplified Font Loading for Material Symbols to avoid Server/Client conflict */}
+        {/* Material Symbols — não suportado por next/font, carregado via CDN */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link 
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" 
           rel="stylesheet" 
