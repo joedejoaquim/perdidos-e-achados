@@ -92,7 +92,7 @@ function DowngradeConfirmModal({ periodEnd, isLoading, onConfirm, onCancel }: Do
         exit={{ opacity: 0, scale: 0.94, y: 8 }}
         transition={{ duration: 0.18 }}
         className="bg-white dark:bg-slate-900 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
         <h3 id={titleId} className="text-lg font-black text-slate-900 dark:text-white mb-2">
           Tem a certeza?
@@ -188,7 +188,7 @@ export function ComparePlansModal({
       containerRef.current.querySelectorAll<HTMLElement>(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       )
-    ).filter((el) => el.offsetParent !== null);
+    ).filter((el: HTMLElement) => el.offsetParent !== null);
     if (focusable.length === 0) return;
     const first = focusable[0] as HTMLElement;
     const last = focusable[focusable.length - 1] as HTMLElement;
@@ -269,7 +269,7 @@ export function ComparePlansModal({
             aria-modal="true"
             aria-labelledby={titleId}
             className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
             onKeyDown={handleKeyDown}
           >
             {/* Downgrade confirm overlay */}
