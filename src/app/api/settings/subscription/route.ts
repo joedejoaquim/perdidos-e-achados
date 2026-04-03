@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 // POST — cria sessão de checkout Stripe
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     // Busca ou cria customer no Stripe
-    let { data: sub } = await supabase
+    const { data: sub } = await supabase
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", session.user.id)
