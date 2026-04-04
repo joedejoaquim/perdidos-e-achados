@@ -184,14 +184,12 @@ export function ComparePlansModal({
   // Focus trap
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== 'Tab' || !containerRef.current) return;
-    const focusable = Array.from(
-      containerRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((el: HTMLElement) => el.offsetParent !== null);
+    const selector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusable = (Array.from(containerRef.current.querySelectorAll(selector)) as HTMLElement[])
+      .filter((el) => (el as HTMLElement & { offsetParent: Element | null }).offsetParent !== null);
     if (focusable.length === 0) return;
-    const first = focusable[0] as HTMLElement;
-    const last = focusable[focusable.length - 1] as HTMLElement;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
     if (e.shiftKey) {
       if (document.activeElement === first) { e.preventDefault(); last.focus(); }
     } else {
