@@ -11,6 +11,7 @@ import { usePrivacySettings } from '@/hooks/usePrivacySettings';
 import { useSubscription } from '@/hooks/useSubscription';
 import { ItemsVisibility } from '@/types';
 import { ComparePlansModal } from '@/components/dashboard/ComparePlansModal';
+import { PrivacyPolicyModal } from '@/components/dashboard/PrivacyPolicyModal';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { useComparePlansModal } from '@/hooks/useComparePlansModal';
@@ -39,6 +40,7 @@ export default function SettingsPage() {
   const { subscription, loading: subLoading, actionLoading: subActionLoading, isPro, subscribe, cancel: cancelSub, error: subError, refetch: refetchSub } = useSubscription();
 
   const [showVisibilidadeMenu, setShowVisibilidadeMenu] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
   const comparePlansModal = useComparePlansModal();
   const comparePlansTriggerRef = useRef<HTMLButtonElement>(null);
@@ -439,15 +441,16 @@ export default function SettingsPage() {
                     <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
                       <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Dados & Permissões</p>
                       {[
-                        { icon: 'apps',     label: 'Permissões do Aplicativo',    onClick: () => alert('Em breve') },
-                        { icon: 'storage',  label: 'Gerenciar dados armazenados', onClick: () => alert('Em breve') },
-                        { icon: 'download', label: 'Exportar meus dados',         onClick: exportData },
+                        { icon: 'download', label: 'Exportar meus dados', desc: 'Descarregar todos os seus dados em JSON', onClick: exportData },
                       ].map(item => (
-                        <button key={item.label} onClick={item.onClick} className="flex items-center gap-4 px-5 py-4 w-full hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+                        <button key={item.label} onClick={item.onClick} className="flex items-center gap-4 px-5 py-4 w-full hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-left">
                           <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[18px] text-slate-600 dark:text-slate-300">{item.icon}</span>
                           </div>
-                          <span className="flex-1 text-sm font-medium text-slate-800 dark:text-white text-left">{item.label}</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-sm font-medium text-slate-800 dark:text-white">{item.label}</span>
+                            <span className="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">{item.desc}</span>
+                          </div>
                           <span className="material-symbols-outlined text-[18px] text-slate-400">chevron_right</span>
                         </button>
                       ))}
@@ -483,7 +486,7 @@ export default function SettingsPage() {
                       <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-5 relative overflow-hidden">
                         <p className="font-bold text-slate-800 dark:text-white text-base mb-1">Dúvidas sobre seus dados?</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Leia nossa política de curadoria digital e entenda como protegemos você.</p>
-                        <button className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
+                        <button onClick={() => setShowPrivacyPolicy(true)} className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
                           Ver Política <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                         </button>
                         <span className="material-symbols-outlined absolute -bottom-3 -right-3 text-[80px] text-slate-200 dark:text-slate-700">search</span>
@@ -633,6 +636,11 @@ export default function SettingsPage() {
         onCancelSubscription={handleCancelSubscription}
         onRetry={handleRetrySubscription}
         onToast={addToast}
+      />
+
+      <PrivacyPolicyModal
+        isOpen={showPrivacyPolicy}
+        onClose={() => setShowPrivacyPolicy(false)}
       />
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
