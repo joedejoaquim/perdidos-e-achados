@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { UserPrivacySettings } from "@/types";
+import { UserPrivacySettings, ItemsVisibility } from "@/types";
 
 const DEFAULTS: Omit<UserPrivacySettings, "id" | "user_id" | "created_at" | "updated_at"> = {
   public_profile: true,
   allow_contact: false,
   items_visibility: "friends",
 };
+
+const VISIBILITY_VALUES: ItemsVisibility[] = ["everyone", "friends", "only_me"];
+
+// Admin client para operações que requerem service role (ex: deleteUser)
+function getAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 export async function GET() {
   try {
@@ -38,11 +50,28 @@ export async function PATCH(req: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = await req.json();
+    const body = await req.json() as Record<string, unknown>;
+
+    // Validar e sanitizar campos permitidos
+    const sanitized: Partial<UserPrivacySettings> = {};
+    if ("public_profile" in body && typeof body.public_profile === "boolean") {
+      sanitized.public_profile = body.public_profile;
+    }
+    if ("allow_contact" in body && typeof body.allow_contact === "boolean") {
+      sanitized.allow_contact = body.allow_contact;
+    }
+    if ("items_visibility" in body && VISIBILITY_VALUES.includes(body.items_visibility as ItemsVisibility)) {
+      sanitized.items_visibility = body.items_visibility as ItemsVisibility;
+    }
+
+    if (Object.keys(sanitized).length === 0) {
+      return NextResponse.json({ error: "Nenhum campo válido para actualizar" }, { status: 400 });
+    }
+
     const { data, error } = await supabase
       .from("user_privacy_settings")
       .upsert(
-        { ...body, user_id: session.user.id, updated_at: new Date().toISOString() },
+        { ...sanitized, user_id: session.user.id, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       )
       .select()
@@ -62,22 +91,17 @@ export async function DELETE() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Apagar todos os dados do utilizador e a conta de auth
     const userId = session.user.id;
 
-    // Apagar dados relacionados (cascata já trata a maioria, mas garantimos)
+    // Apagar dados do utilizador (a cascata ON DELETE CASCADE trata o resto)
     await supabase.from("user_notification_preferences").delete().eq("user_id", userId);
     await supabase.from("user_privacy_settings").delete().eq("user_id", userId);
     await supabase.from("users").delete().eq("id", userId);
 
-    // Apagar conta de auth (requer service role — feito via admin client)
-    const { createClient } = await import("@supabase/supabase-js");
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-    await adminClient.auth.admin.deleteUser(userId);
+    // Apagar conta de auth via service role
+    const adminClient = getAdminClient();
+    const { error: authError } = await adminClient.auth.admin.deleteUser(userId);
+    if (authError) throw authError;
 
     return NextResponse.json({ success: true });
   } catch (error) {

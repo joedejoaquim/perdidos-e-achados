@@ -34,7 +34,7 @@ export default function SettingsPage() {
   const {
     settings: privacySettings, loading: privacyLoading, saving: privacySaving,
     togglePublicProfile, toggleAllowContact, setVisibility,
-    exportData, deleteAccount,
+    exportData, deleteAccount, error: privacyError,
   } = usePrivacySettings();
   const { subscription, loading: subLoading, actionLoading: subActionLoading, isPro, subscribe, cancel: cancelSub, error: subError, refetch: refetchSub } = useSubscription();
 
@@ -339,18 +339,34 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <>
+                    {privacySaving && (
+                      <div className="mb-4 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span className="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span>
+                        A guardar...
+                      </div>
+                    )}
+                    {privacyError && (
+                      <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-xs text-red-700 dark:text-red-300">
+                        <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                        {privacyError}
+                      </div>
+                    )}
                     {/* Privacidade */}
                     <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
                       <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Privacidade</p>
 
                       {/* Mostrar perfil */}
                       <div className="flex items-center justify-between px-5 py-4">
-                        <p className="text-sm font-medium text-slate-800 dark:text-white">Mostrar meu perfil publicamente</p>
+                        <div>
+                          <p className="text-sm font-medium text-slate-800 dark:text-white">Mostrar meu perfil publicamente</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Outros utilizadores podem ver o seu perfil</p>
+                        </div>
                         <button
                           onClick={togglePublicProfile}
                           disabled={privacySaving}
                           className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${privacySettings?.public_profile ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                          aria-label="Toggle perfil público"
+                          aria-label={`${privacySettings?.public_profile ? 'Desactivar' : 'Activar'} perfil público`}
+                          aria-pressed={!!privacySettings?.public_profile}
                         >
                           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacySettings?.public_profile ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
@@ -358,12 +374,16 @@ export default function SettingsPage() {
 
                       {/* Permitir contato */}
                       <div className="flex items-center justify-between px-5 py-4">
-                        <p className="text-sm font-medium text-slate-800 dark:text-white">Permitir que outros me contactem</p>
+                        <div>
+                          <p className="text-sm font-medium text-slate-800 dark:text-white">Permitir que outros me contactem</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Receba mensagens de outros utilizadores</p>
+                        </div>
                         <button
                           onClick={toggleAllowContact}
                           disabled={privacySaving}
                           className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${privacySettings?.allow_contact ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                          aria-label="Toggle permitir contato"
+                          aria-label={`${privacySettings?.allow_contact ? 'Desactivar' : 'Activar'} contacto`}
+                          aria-pressed={!!privacySettings?.allow_contact}
                         >
                           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${privacySettings?.allow_contact ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
@@ -371,31 +391,45 @@ export default function SettingsPage() {
 
                       {/* Visibilidade dos achados */}
                       <div className="flex items-center justify-between px-5 py-4 relative">
-                        <p className="text-sm font-medium text-slate-800 dark:text-white">Quem pode ver meus achados</p>
+                        <div>
+                          <p className="text-sm font-medium text-slate-800 dark:text-white">Quem pode ver meus achados</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Controle a visibilidade dos seus itens registados</p>
+                        </div>
                         <div className="relative">
                           <button
                             onClick={() => setShowVisibilidadeMenu(v => !v)}
                             className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-white shadow-sm hover:shadow transition-all"
+                            aria-haspopup="listbox"
+                            aria-expanded={showVisibilidadeMenu}
                           >
                             {{ everyone: 'Todos', friends: 'Apenas amigos', only_me: 'Somente eu' }[privacySettings?.items_visibility ?? 'friends']}
                             <span className="material-symbols-outlined text-[16px]">expand_more</span>
                           </button>
                           {showVisibilidadeMenu && (
-                            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-10 overflow-hidden min-w-[160px]">
-                              {([
-                                { value: 'everyone', label: 'Todos' },
-                                { value: 'friends',  label: 'Apenas amigos' },
-                                { value: 'only_me',  label: 'Somente eu' },
-                              ] as { value: ItemsVisibility; label: string }[]).map(opt => (
-                                <button
-                                  key={opt.value}
-                                  onClick={() => { setVisibility(opt.value); setShowVisibilidadeMenu(false); }}
-                                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${privacySettings?.items_visibility === opt.value ? 'font-bold text-primary' : 'text-slate-700 dark:text-white'}`}
-                                >
-                                  {opt.label}
-                                </button>
-                              ))}
-                            </div>
+                            <>
+                              {/* Overlay para fechar ao clicar fora */}
+                              <div className="fixed inset-0 z-10" onClick={() => setShowVisibilidadeMenu(false)} aria-hidden="true" />
+                              <div role="listbox" className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-20 overflow-hidden min-w-[160px]">
+                                {([
+                                  { value: 'everyone', label: 'Todos' },
+                                  { value: 'friends',  label: 'Apenas amigos' },
+                                  { value: 'only_me',  label: 'Somente eu' },
+                                ] as { value: ItemsVisibility; label: string }[]).map(opt => (
+                                  <button
+                                    key={opt.value}
+                                    role="option"
+                                    aria-selected={privacySettings?.items_visibility === opt.value}
+                                    onClick={() => { setVisibility(opt.value); setShowVisibilidadeMenu(false); }}
+                                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-between ${privacySettings?.items_visibility === opt.value ? 'font-bold text-primary' : 'text-slate-700 dark:text-white'}`}
+                                  >
+                                    {opt.label}
+                                    {privacySettings?.items_visibility === opt.value && (
+                                      <span className="material-symbols-outlined text-[16px] text-primary">check</span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>

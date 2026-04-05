@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { UserPrivacySettings, ItemsVisibility } from "@/types";
 
 const DEFAULTS: Omit<UserPrivacySettings, "id" | "created_at" | "updated_at"> = {
@@ -15,23 +15,35 @@ export function usePrivacySettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
+  // Guarda o estado anterior para rollback correcto
+  const previousRef = useRef<UserPrivacySettings | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch("/api/settings/privacy")
       .then(r => r.json())
       .then(res => {
-        if (res.success) setSettings({ ...DEFAULTS, ...res.data });
-        else setError(res.error);
+        if (res.success) {
+          setSettings({ ...DEFAULTS, ...res.data });
+        } else {
+          // Qualquer erro — mostra defaults para não bloquear o utilizador
+          setSettings({ ...DEFAULTS });
+        }
       })
-      .catch(() => setError("Erro ao carregar configurações"))
+      .catch(() => setSettings({ ...DEFAULTS }))
       .finally(() => setLoading(false));
-  }, []);
+  }, [fetchKey]);
+
+  const refetch = useCallback(() => setFetchKey(k => k + 1), []);
 
   const patch = useCallback(async (updates: Partial<UserPrivacySettings>) => {
     if (!settings) return;
-    const optimistic = { ...settings, ...updates };
-    setSettings(optimistic);
+    previousRef.current = settings;
+    setSettings(prev => prev ? { ...prev, ...updates } : prev); // optimistic
     setSaving(true);
+    setError(null);
     try {
       const res = await fetch("/api/settings/privacy", {
         method: "PATCH",
@@ -40,33 +52,46 @@ export function usePrivacySettings() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setSettings(settings); // rollback
-        setError(json.error || "Erro ao salvar");
+        setSettings(previousRef.current); // rollback
+        setError(json.error || "Erro ao guardar");
+      } else if (json.data) {
+        setSettings(prev => prev ? { ...prev, ...json.data } : prev);
       }
     } catch {
-      setSettings(settings); // rollback
-      setError("Erro ao salvar");
+      setSettings(previousRef.current); // rollback
+      setError("Erro ao guardar configurações");
     } finally {
       setSaving(false);
     }
   }, [settings]);
 
-  const togglePublicProfile = () => patch({ public_profile: !settings?.public_profile });
-  const toggleAllowContact = () => patch({ allow_contact: !settings?.allow_contact });
-  const setVisibility = (v: ItemsVisibility) => patch({ items_visibility: v });
+  const togglePublicProfile = useCallback(
+    () => patch({ public_profile: !settings?.public_profile }),
+    [patch, settings?.public_profile]
+  );
 
-  const exportData = () => {
+  const toggleAllowContact = useCallback(
+    () => patch({ allow_contact: !settings?.allow_contact }),
+    [patch, settings?.allow_contact]
+  );
+
+  const setVisibility = useCallback(
+    (v: ItemsVisibility) => patch({ items_visibility: v }),
+    [patch]
+  );
+
+  const exportData = useCallback(() => {
     window.open("/api/settings/export", "_blank");
-  };
+  }, []);
 
-  const deleteAccount = async (): Promise<boolean> => {
+  const deleteAccount = useCallback(async (): Promise<boolean> => {
     const res = await fetch("/api/settings/privacy", { method: "DELETE" });
     return res.ok;
-  };
+  }, []);
 
   return {
     settings, loading, saving, error,
     togglePublicProfile, toggleAllowContact, setVisibility,
-    exportData, deleteAccount,
+    exportData, deleteAccount, refetch,
   };
 }
