@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { prefs, loading: notifsLoading, saving: notifsSaving, toggle: toggleNotif, error: notifsError, refetch: refetchNotifs } = useNotificationPreferences();
+  const { prefs, loading: notifsLoading, saving: notifsSaving, toggle: toggleNotif, error: notifsError } = useNotificationPreferences();
   const {
     settings: privacySettings, loading: privacyLoading, saving: privacySaving,
     togglePublicProfile, toggleAllowContact, setVisibility,
@@ -238,25 +238,18 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-center py-16">
                     <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
                   </div>
-                ) : notifsError ? (
-                  <m.div variants={itemVariants} className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center">
-                    <span className="material-symbols-outlined text-red-500 text-[32px] mb-3 block">error_outline</span>
-                    <p className="text-sm font-semibold text-red-800 dark:text-red-300 mb-4">
-                      Não foi possível carregar as preferências. Tente novamente.
-                    </p>
-                    <button
-                      onClick={refetchNotifs}
-                      className="px-5 py-2 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors"
-                    >
-                      Tentar novamente
-                    </button>
-                  </m.div>
                 ) : (
                   <>
                     {notifsSaving && (
                       <div className="mb-4 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                         <span className="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span>
                         A guardar...
+                      </div>
+                    )}
+                    {notifsError && (
+                      <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-xs text-red-700 dark:text-red-300">
+                        <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                        {notifsError}
                       </div>
                     )}
                     {/* Grupo principal */}

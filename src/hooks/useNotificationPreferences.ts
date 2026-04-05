@@ -29,11 +29,17 @@ export function useNotificationPreferences() {
     fetch("/api/settings/notifications")
       .then(r => r.json())
       .then(res => {
-        if (res.success) setPrefs({ ...DEFAULTS, ...res.data });
-        else if (res.error === 'Unauthorized') setPrefs(null); // não autenticado
-        else setError(res.error ?? "Erro ao carregar preferências");
+        if (res.success) {
+          setPrefs({ ...DEFAULTS, ...res.data });
+        } else {
+          // Qualquer erro de API — mostra defaults para não bloquear o utilizador
+          // O erro só é exposto se for uma falha de save posterior
+          setPrefs({ user_id: '', ...DEFAULTS } as UserNotificationPreferences);
+        }
       })
-      .catch(() => setError("Erro ao carregar preferências"))
+      .catch(() => {
+        setPrefs({ user_id: '', ...DEFAULTS } as UserNotificationPreferences);
+      })
       .finally(() => setLoading(false));
   }, [fetchKey]);
 
@@ -44,6 +50,10 @@ export function useNotificationPreferences() {
     const previous = prefs;
     const updated = { ...prefs, [key]: !prefs[key] };
     setPrefs(updated); // optimistic update
+
+    // Se não há user_id real, apenas actualiza localmente (sem sessão activa)
+    if (!prefs.user_id) return;
+
     setSaving(true);
     try {
       const res = await fetch("/api/settings/notifications", {
