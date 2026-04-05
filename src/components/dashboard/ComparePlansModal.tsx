@@ -155,9 +155,11 @@ export function ComparePlansModal({
   useEffect(() => { setMounted(true); }, []);
 
   // Determina estado do modal
+  // Só mostra erro se for falha de rede/servidor real (não unauthorized ou sem subscrição)
+  const isNetworkError = !!subError && subError !== 'Unauthorized' && subError !== 'Internal server error';
   const modalState: ModalState = subLoading
     ? 'loading'
-    : subError
+    : isNetworkError
       ? 'error'
       : isPro
         ? 'subscribed'

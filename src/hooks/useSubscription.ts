@@ -17,6 +17,7 @@ export function useSubscription() {
       .then(r => r.json())
       .then(res => {
         if (res.success) setSubscription(res.data);
+        else if (res.error === 'Unauthorized') setSubscription(null); // não autenticado = sem subscrição
         else setError(res.error);
       })
       .catch(() => setError("Erro ao carregar assinatura"))
