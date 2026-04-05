@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { stripe } from "@/lib/stripe";
 
@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 // POST — cria sessão de checkout Stripe
-export async function POST(_req: NextRequest) {
+export async function POST() {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();

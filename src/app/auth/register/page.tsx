@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { isValidEmail, isValidPhone } from "@/utils/helpers";
 import { m } from "framer-motion";
 
@@ -184,10 +185,11 @@ export default function RegisterPage() {
             transition={{ duration: 2 }}
             className="absolute right-0 bottom-0 w-[120%] h-full pointer-events-none select-none"
           >
-            <img
+            <Image
               src="/login_hero_3d.png"
               alt="Decorative 3D Art"
-              className="w-full h-full object-contain object-right-bottom scale-125 translate-x-1/4 translate-y-1/4"
+              fill
+              className="object-contain object-right-bottom scale-125 translate-x-1/4 translate-y-1/4"
             />
           </m.div>
 
