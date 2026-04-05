@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import type { PrefsKey } from '@/hooks/useNotificationPreferences';
 import { usePrivacySettings } from '@/hooks/usePrivacySettings';
 import { useSubscription } from '@/hooks/useSubscription';
 import { ItemsVisibility } from '@/types';
@@ -29,7 +30,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { prefs, loading: notifsLoading, saving: notifsSaving, toggle: toggleNotif } = useNotificationPreferences();
+  const { prefs, loading: notifsLoading, saving: notifsSaving, toggle: toggleNotif, error: notifsError, refetch: refetchNotifs } = useNotificationPreferences();
   const {
     settings: privacySettings, loading: privacyLoading, saving: privacySaving,
     togglePublicProfile, toggleAllowContact, setVisibility,
@@ -237,8 +238,27 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-center py-16">
                     <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
                   </div>
+                ) : notifsError ? (
+                  <m.div variants={itemVariants} className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center">
+                    <span className="material-symbols-outlined text-red-500 text-[32px] mb-3 block">error_outline</span>
+                    <p className="text-sm font-semibold text-red-800 dark:text-red-300 mb-4">
+                      Não foi possível carregar as preferências. Tente novamente.
+                    </p>
+                    <button
+                      onClick={refetchNotifs}
+                      className="px-5 py-2 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors"
+                    >
+                      Tentar novamente
+                    </button>
+                  </m.div>
                 ) : (
                   <>
+                    {notifsSaving && (
+                      <div className="mb-4 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span className="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span>
+                        A guardar...
+                      </div>
+                    )}
                     {/* Grupo principal */}
                     <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
                       {([
@@ -246,7 +266,7 @@ export default function SettingsPage() {
                         { key: 'email_enabled',   icon: 'mail',                  label: 'E-mail',                           desc: 'Atualizações por e-mail' },
                         { key: 'nearby_enabled',  icon: 'near_me',               label: 'Notificações de Achados Próximos', desc: 'Itens encontrados perto de você' },
                         { key: 'weekly_summary',  icon: 'calendar_month',        label: 'Resumo Semanal',                   desc: 'Receba um resumo toda segunda-feira' },
-                      ] as { key: keyof typeof prefs; icon: string; label: string; desc: string }[]).map(item => (
+                      ] as { key: PrefsKey; icon: string; label: string; desc: string }[]).map(item => (
                         <div key={item.key} className="flex items-center gap-4 px-5 py-4">
                           <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
@@ -256,10 +276,11 @@ export default function SettingsPage() {
                             <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
                           </div>
                           <button
-                            onClick={() => toggleNotif(item.key as Parameters<typeof toggleNotif>[0])}
-                            disabled={notifsSaving}
+                            onClick={() => toggleNotif(item.key)}
+                            disabled={notifsSaving || !prefs}
                             className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${prefs?.[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                            aria-label={`Toggle ${item.label}`}
+                            aria-label={`${prefs?.[item.key] ? 'Desactivar' : 'Activar'} ${item.label}`}
+                            aria-pressed={!!prefs?.[item.key]}
                           >
                             <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${prefs?.[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
                               {prefs?.[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
@@ -275,7 +296,7 @@ export default function SettingsPage() {
                       {([
                         { key: 'sound_enabled',     icon: 'volume_up',  label: 'Som de notificação', desc: 'Reproduzir um som ao receber alerta' },
                         { key: 'vibration_enabled', icon: 'vibration',  label: 'Vibração',            desc: 'Vibrar dispositivo para alertas críticos' },
-                      ] as { key: keyof typeof prefs; icon: string; label: string; desc: string }[]).map(item => (
+                      ] as { key: PrefsKey; icon: string; label: string; desc: string }[]).map(item => (
                         <div key={item.key} className="flex items-center gap-4 px-5 py-4">
                           <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-slate-300">{item.icon}</span>
@@ -285,10 +306,11 @@ export default function SettingsPage() {
                             <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
                           </div>
                           <button
-                            onClick={() => toggleNotif(item.key as Parameters<typeof toggleNotif>[0])}
-                            disabled={notifsSaving}
+                            onClick={() => toggleNotif(item.key)}
+                            disabled={notifsSaving || !prefs}
                             className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-60 ${prefs?.[item.key] ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
-                            aria-label={`Toggle ${item.label}`}
+                            aria-label={`${prefs?.[item.key] ? 'Desactivar' : 'Activar'} ${item.label}`}
+                            aria-pressed={!!prefs?.[item.key]}
                           >
                             <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 flex items-center justify-center ${prefs?.[item.key] ? 'translate-x-6' : 'translate-x-0'}`}>
                               {prefs?.[item.key] && <span className="material-symbols-outlined text-[12px] text-primary">check</span>}
