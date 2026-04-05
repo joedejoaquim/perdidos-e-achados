@@ -441,7 +441,41 @@ export default function SettingsPage() {
                     <m.div variants={itemVariants} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl divide-y divide-slate-200 dark:divide-slate-700 mb-4">
                       <p className="px-5 pt-4 pb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Dados & Permissões</p>
                       {[
-                        { icon: 'download', label: 'Exportar meus dados', desc: 'Descarregar todos os seus dados em JSON', onClick: exportData },
+                        {
+                          icon: 'apps',
+                          label: 'Permissões do Aplicativo',
+                          desc: 'Gerir notificações e permissões no browser',
+                          onClick: () => {
+                            if ('Notification' in window) {
+                              Notification.requestPermission().then(perm => {
+                                if (perm === 'granted') addToast('Notificações activadas com sucesso.', 'success');
+                                else if (perm === 'denied') addToast('Notificações bloqueadas. Active nas definições do browser.', 'info');
+                              });
+                            } else {
+                              addToast('O seu browser não suporta notificações push.', 'info');
+                            }
+                          },
+                        },
+                        {
+                          icon: 'storage',
+                          label: 'Gerenciar dados armazenados',
+                          desc: 'Ver e limpar dados em cache localmente',
+                          onClick: () => {
+                            const keys = Object.keys(localStorage).filter(k => k.startsWith('achados'));
+                            if (keys.length === 0) {
+                              addToast('Nenhum dado local armazenado.', 'info');
+                            } else {
+                              keys.forEach(k => localStorage.removeItem(k));
+                              addToast(`${keys.length} item(s) de cache removido(s).`, 'success');
+                            }
+                          },
+                        },
+                        {
+                          icon: 'download',
+                          label: 'Exportar meus dados',
+                          desc: 'Descarregar todos os seus dados em JSON',
+                          onClick: exportData,
+                        },
                       ].map(item => (
                         <button key={item.label} onClick={item.onClick} className="flex items-center gap-4 px-5 py-4 w-full hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-left">
                           <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
