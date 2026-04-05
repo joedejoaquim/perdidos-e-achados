@@ -12,6 +12,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { ItemsVisibility } from '@/types';
 import { ComparePlansModal } from '@/components/dashboard/ComparePlansModal';
 import { PrivacyPolicyModal } from '@/components/dashboard/PrivacyPolicyModal';
+import { AppPermissionsModal } from '@/components/dashboard/AppPermissionsModal';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { useComparePlansModal } from '@/hooks/useComparePlansModal';
@@ -41,6 +42,7 @@ export default function SettingsPage() {
 
   const [showVisibilidadeMenu, setShowVisibilidadeMenu] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showAppPermissions, setShowAppPermissions] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
   const comparePlansModal = useComparePlansModal();
   const comparePlansTriggerRef = useRef<HTMLButtonElement>(null);
@@ -445,16 +447,7 @@ export default function SettingsPage() {
                           icon: 'apps',
                           label: 'Permissões do Aplicativo',
                           desc: 'Gerir notificações e permissões no browser',
-                          onClick: () => {
-                            if ('Notification' in window) {
-                              Notification.requestPermission().then(perm => {
-                                if (perm === 'granted') addToast('Notificações activadas com sucesso.', 'success');
-                                else if (perm === 'denied') addToast('Notificações bloqueadas. Active nas definições do browser.', 'info');
-                              });
-                            } else {
-                              addToast('O seu browser não suporta notificações push.', 'info');
-                            }
-                          },
+                          onClick: () => setShowAppPermissions(true),
                         },
                         {
                           icon: 'storage',
@@ -675,6 +668,11 @@ export default function SettingsPage() {
       <PrivacyPolicyModal
         isOpen={showPrivacyPolicy}
         onClose={() => setShowPrivacyPolicy(false)}
+      />
+
+      <AppPermissionsModal
+        isOpen={showAppPermissions}
+        onClose={() => setShowAppPermissions(false)}
       />
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
