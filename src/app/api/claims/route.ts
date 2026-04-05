@@ -4,6 +4,7 @@ import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { calculatePaymentDistribution } from "@/utils/helpers";
+import { sendClaimReceivedEmail } from "@/services/email.service";
 
 export const dynamic = "force-dynamic";
 
@@ -163,6 +164,38 @@ export async function POST(req: NextRequest) {
         warning =
           "A solicitacao foi criada, mas o pagamento protegido nao foi inicializado.";
       }
+    }
+
+    // Notificar o localizador por email (fire-and-forget)
+    try {
+      const db = supabaseAdmin ?? authSupabase;
+      const { data: finderUser } = await db
+        .from("users")
+        .select("email, name")
+        .eq("id", item.finder_id)
+        .single();
+      const { data: ownerUser } = await db
+        .from("users")
+        .select("name")
+        .eq("id", authUser.id)
+        .single();
+      const { data: notifPrefs } = await db
+        .from("user_notification_preferences")
+        .select("email_enabled")
+        .eq("user_id", item.finder_id)
+        .single();
+
+      if (finderUser?.email && ownerUser?.name && notifPrefs?.email_enabled !== false) {
+        await sendClaimReceivedEmail({
+          finderEmail: finderUser.email,
+          finderName: finderUser.name,
+          ownerName: ownerUser.name,
+          itemTitle: item.title,
+          claimId: claim.id,
+        });
+      }
+    } catch (emailErr) {
+      console.error("Error sending claim notification email:", emailErr);
     }
 
     return NextResponse.json(

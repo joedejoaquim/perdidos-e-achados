@@ -6,6 +6,7 @@ import { stripe } from "@/lib/stripe";
 
 import { GamificationService } from "@/services/gamification.service";
 import { supabase } from "@/lib/supabase";
+import { sendPaymentReleasedEmail } from "@/services/email.service";
 
 export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
@@ -46,6 +47,36 @@ export async function POST(req: NextRequest) {
 
         const finderId = payment.claims.finder_id;
         await GamificationService.rewardDelivery(finderId);
+
+        // Email ao localizador a confirmar o pagamento
+        try {
+          const { data: finderUser } = await supabase
+            .from("users")
+            .select("email, name")
+            .eq("id", finderId)
+            .single();
+          const { data: itemData } = await supabase
+            .from("found_items")
+            .select("title")
+            .eq("id", payment.item_id ?? '')
+            .single();
+          const { data: notifPrefs } = await supabase
+            .from("user_notification_preferences")
+            .select("email_enabled")
+            .eq("user_id", finderId)
+            .single();
+
+          if (finderUser?.email && notifPrefs?.email_enabled !== false) {
+            await sendPaymentReleasedEmail({
+              finderEmail: finderUser.email,
+              finderName: finderUser.name,
+              itemTitle: itemData?.title ?? 'item',
+              amount: paymentIntent.amount / 100,
+            });
+          }
+        } catch (emailErr) {
+          console.error("Error sending payment email:", emailErr);
+        }
       }
     }
 
