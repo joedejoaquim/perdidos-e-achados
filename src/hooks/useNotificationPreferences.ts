@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { UserNotificationPreferences } from "@/types";
 
 type PrefsKey = keyof Omit<UserNotificationPreferences, "id" | "user_id" | "created_at" | "updated_at">;
@@ -22,6 +22,9 @@ export function useNotificationPreferences() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
+  // Ref para aceder ao estado mais recente sem re-criar callbacks
+  const prefsRef = useRef<UserNotificationPreferences | null>(null);
+  prefsRef.current = prefs;
 
   useEffect(() => {
     setLoading(true);
@@ -32,8 +35,6 @@ export function useNotificationPreferences() {
         if (res.success) {
           setPrefs({ ...DEFAULTS, ...res.data });
         } else {
-          // Qualquer erro de API — mostra defaults para não bloquear o utilizador
-          // O erro só é exposto se for uma falha de save posterior
           setPrefs({ user_id: '', ...DEFAULTS } as UserNotificationPreferences);
         }
       })
@@ -46,35 +47,38 @@ export function useNotificationPreferences() {
   const refetch = useCallback(() => setFetchKey(k => k + 1), []);
 
   const toggle = useCallback(async (key: PrefsKey) => {
-    if (!prefs) return;
-    const previous = prefs;
-    const updated = { ...prefs, [key]: !prefs[key] };
-    setPrefs(updated); // optimistic update
+    const current = prefsRef.current;
+    if (!current) return;
 
-    // Se não há user_id real, apenas actualiza localmente (sem sessão activa)
-    if (!prefs.user_id) return;
+    // Actualiza sempre o estado local imediatamente
+    const newValue = !current[key];
+    setPrefs(prev => prev ? { ...prev, [key]: newValue } : prev);
+    setError(null);
+
+    // Só persiste na API se tiver user_id real
+    if (!current.user_id) return;
 
     setSaving(true);
     try {
       const res = await fetch("/api/settings/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [key]: !previous[key] }),
+        body: JSON.stringify({ [key]: newValue }),
       });
       const json = await res.json();
       if (!res.ok) {
-        setPrefs(previous); // rollback
-        setError(json.error || "Erro ao salvar");
+        setPrefs(current); // rollback
+        setError(json.error || "Erro ao guardar");
       } else if (json.data) {
         setPrefs(prev => prev ? { ...prev, ...json.data } : prev);
       }
     } catch {
-      setPrefs(previous); // rollback
-      setError("Erro ao salvar preferências");
+      setPrefs(current); // rollback
+      setError("Erro ao guardar preferências");
     } finally {
       setSaving(false);
     }
-  }, [prefs]);
+  }, []); // sem dependências — usa sempre prefsRef.current
 
   return { prefs, loading, saving, error, toggle, refetch };
 }

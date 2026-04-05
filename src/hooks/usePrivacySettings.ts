@@ -16,8 +16,9 @@ export function usePrivacySettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
-  // Guarda o estado anterior para rollback correcto
-  const previousRef = useRef<UserPrivacySettings | null>(null);
+  // Ref para aceder ao estado mais recente dentro de callbacks sem re-criar
+  const settingsRef = useRef<UserPrivacySettings | null>(null);
+  settingsRef.current = settings;
 
   useEffect(() => {
     setLoading(true);
@@ -28,7 +29,6 @@ export function usePrivacySettings() {
         if (res.success) {
           setSettings({ ...DEFAULTS, ...res.data });
         } else {
-          // Qualquer erro — mostra defaults para não bloquear o utilizador
           setSettings({ ...DEFAULTS });
         }
       })
@@ -38,12 +38,19 @@ export function usePrivacySettings() {
 
   const refetch = useCallback(() => setFetchKey(k => k + 1), []);
 
+  // patch usa settingsRef para evitar closures stale
   const patch = useCallback(async (updates: Partial<UserPrivacySettings>) => {
-    if (!settings) return;
-    previousRef.current = settings;
-    setSettings(prev => prev ? { ...prev, ...updates } : prev); // optimistic
-    setSaving(true);
+    const current = settingsRef.current;
+    if (!current) return;
+
+    // Actualiza sempre o estado local imediatamente (optimistic)
+    setSettings(prev => prev ? { ...prev, ...updates } : prev);
     setError(null);
+
+    // Só tenta guardar na API se tiver user_id real
+    if (!current.user_id) return;
+
+    setSaving(true);
     try {
       const res = await fetch("/api/settings/privacy", {
         method: "PATCH",
@@ -52,27 +59,34 @@ export function usePrivacySettings() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setSettings(previousRef.current); // rollback
+        // Rollback apenas se a API falhar com erro real
+        setSettings(current);
         setError(json.error || "Erro ao guardar");
       } else if (json.data) {
         setSettings(prev => prev ? { ...prev, ...json.data } : prev);
       }
     } catch {
-      setSettings(previousRef.current); // rollback
+      setSettings(current);
       setError("Erro ao guardar configurações");
     } finally {
       setSaving(false);
     }
-  }, [settings]);
+  }, []); // sem dependências — usa sempre settingsRef.current
 
   const togglePublicProfile = useCallback(
-    () => patch({ public_profile: !settings?.public_profile }),
-    [patch, settings?.public_profile]
+    () => {
+      const current = settingsRef.current;
+      patch({ public_profile: !current?.public_profile });
+    },
+    [patch]
   );
 
   const toggleAllowContact = useCallback(
-    () => patch({ allow_contact: !settings?.allow_contact }),
-    [patch, settings?.allow_contact]
+    () => {
+      const current = settingsRef.current;
+      patch({ allow_contact: !current?.allow_contact });
+    },
+    [patch]
   );
 
   const setVisibility = useCallback(
