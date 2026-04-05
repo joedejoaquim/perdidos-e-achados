@@ -2,7 +2,7 @@
 
 import { AnimatePresence, m } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface PrivacyPolicyModalProps {
@@ -12,6 +12,9 @@ interface PrivacyPolicyModalProps {
 
 export function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyModalProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -27,7 +30,7 @@ export function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyModalProps)
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
-  if (typeof window === 'undefined') return null;
+  if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence>
