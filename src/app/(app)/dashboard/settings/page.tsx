@@ -73,20 +73,65 @@ export default function SettingsPage() {
     }
   };
 
+  const [photoLoading, setPhotoLoading] = useState(false);
+
   const handlePhotoClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user?.id) return;
+
     if (file.size > 5 * 1024 * 1024) {
-      alert('O arquivo deve ter no máximo 5MB.');
+      addToast('O ficheiro deve ter no máximo 5MB.', 'error');
       e.target.value = '';
       return;
     }
-    // TODO: fazer upload do arquivo
-    console.log('Foto selecionada:', file.name);
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      addToast('Formato inválido. Use JPG, PNG ou WebP.', 'error');
+      e.target.value = '';
+      return;
+    }
+
+    setPhotoLoading(true);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${user.id}/avatar.${ext}`;
+
+      // Upload para o bucket 'avatars' no Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(path);
+
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`; // cache bust
+
+      // Actualizar na tabela users
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      addToast('Foto de perfil actualizada com sucesso.', 'success');
+      // Força reload da página para reflectir a nova foto no header
+      window.location.reload();
+    } catch (err) {
+      console.error('Erro ao fazer upload da foto:', err);
+      addToast('Erro ao actualizar a foto. Tente novamente.', 'error');
+    } finally {
+      setPhotoLoading(false);
+      e.target.value = '';
+    }
   };
 
   useEffect(() => {
@@ -172,19 +217,41 @@ export default function SettingsPage() {
                  <m.h2 variants={itemVariants} className="text-xl font-bold text-slate-900 dark:text-white mb-6">Informações Pessoais</m.h2>
                  
                  <m.div variants={itemVariants} className="flex items-center gap-6 mb-8">
-                   <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-orange-400 text-white flex items-center justify-center text-3xl font-bold shadow-lg shadow-primary/20 shrink-0">
-                     {user?.name?.charAt(0).toUpperCase() || "A"}
+                   <div className="relative w-24 h-24 shrink-0">
+                     {user?.avatar_url ? (
+                       // eslint-disable-next-line @next/next/no-img-element
+                       <img
+                         src={user.avatar_url}
+                         alt={user.name}
+                         className="w-24 h-24 rounded-2xl object-cover shadow-lg"
+                       />
+                     ) : (
+                       <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-orange-400 text-white flex items-center justify-center text-3xl font-bold shadow-lg shadow-primary/20">
+                         {user?.name?.charAt(0).toUpperCase() || 'A'}
+                       </div>
+                     )}
+                     {photoLoading && (
+                       <div className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center">
+                         <span className="material-symbols-outlined text-white animate-spin text-[24px]">progress_activity</span>
+                       </div>
+                     )}
                    </div>
                    <div>
                      <input
                        ref={fileInputRef}
                        type="file"
-                       accept="image/jpeg,image/png"
+                       accept="image/jpeg,image/png,image/webp"
                        className="hidden"
                        onChange={handleFileChange}
                      />
-                     <button onClick={handlePhotoClick} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white rounded-lg text-sm font-bold shadow-sm hover:shadow transition-all border border-slate-200 dark:border-slate-700">Alterar Foto</button>
-                     <p className="text-xs text-slate-500 mt-2">Formatos: JPG, PNG até 5MB</p>
+                     <button
+                       onClick={handlePhotoClick}
+                       disabled={photoLoading}
+                       className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white rounded-lg text-sm font-bold shadow-sm hover:shadow transition-all border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+                     >
+                       {photoLoading ? 'A enviar…' : 'Alterar Foto'}
+                     </button>
+                     <p className="text-xs text-slate-500 mt-2">Formatos: JPG, PNG, WebP até 5MB</p>
                    </div>
                  </m.div>
 
