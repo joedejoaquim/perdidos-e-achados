@@ -20,10 +20,17 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  const { pathname, search } = request.nextUrl;
+  const isProtectedRoute = matchesRoute(pathname, protectedRoutes);
+  const isAuthRoute = matchesRoute(pathname, authRoutes);
+
+  // Se não é rota protegida nem de auth, passa directamente sem chamar Supabase
+  if (!isProtectedRoute && !isAuthRoute) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   });
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -43,26 +50,24 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { pathname, search } = request.nextUrl;
-  const isProtectedRoute = matchesRoute(pathname, protectedRoutes);
-  const isAuthRoute = matchesRoute(pathname, authRoutes);
+  try {
+    // getSession() valida o JWT localmente (~1ms) — não faz request externa
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
 
-  // Optimização Crítica de Navegação:
-  // getSession() apenas valida o JWT localmente (instantâneo ~1ms). 
-  // getUser() faz uma request externa ao Supabase (~200-500ms) a cada navegação de tela!
-  // Como o middleware server apenas para roteamento visual, getSession() é a escolha ideal de performance.
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
+    if (isProtectedRoute && !user) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("next", `${pathname}${search}`);
+      return NextResponse.redirect(loginUrl);
+    }
 
-  if (isProtectedRoute && !user) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("next", `${pathname}${search}`);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  if (isAuthRoute && user) {
-    const nextPath = getSafeRedirectPath(request.nextUrl.searchParams.get("next"));
-    return NextResponse.redirect(new URL(nextPath, request.url));
+    if (isAuthRoute && user) {
+      const nextPath = getSafeRedirectPath(request.nextUrl.searchParams.get("next"));
+      return NextResponse.redirect(new URL(nextPath, request.url));
+    }
+  } catch {
+    // Em caso de erro, deixa passar — melhor do que um 504
+    return NextResponse.next({ request });
   }
 
   return response;

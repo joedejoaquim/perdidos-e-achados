@@ -97,37 +97,19 @@ export default function SettingsPage() {
 
     setPhotoLoading(true);
     try {
-      const ext = file.name.split('.').pop() ?? 'jpg';
-      const path = `${user.id}/avatar.${ext}`;
+      const form = new FormData();
+      form.append('file', file);
 
-      // Upload para o bucket 'avatars' no Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, file, { upsert: true, contentType: file.type });
+      const res = await fetch('/api/auth/profile', { method: 'POST', body: form });
+      const json = await res.json();
 
-      if (uploadError) throw uploadError;
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(path);
-
-      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`; // cache bust
-
-      // Actualizar na tabela users
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
+      if (!res.ok) throw new Error(json.error || 'Erro ao fazer upload');
 
       addToast('Foto de perfil actualizada com sucesso.', 'success');
-      // Força reload da página para reflectir a nova foto no header
       window.location.reload();
     } catch (err) {
       console.error('Erro ao fazer upload da foto:', err);
-      addToast('Erro ao actualizar a foto. Tente novamente.', 'error');
+      addToast(err instanceof Error ? err.message : 'Erro ao actualizar a foto. Tente novamente.', 'error');
     } finally {
       setPhotoLoading(false);
       e.target.value = '';
